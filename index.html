@@ -585,9 +585,11 @@ var swReg = null;
 var deferredInstall = null;
 
 document.addEventListener("DOMContentLoaded", function() {
-    isNativeApp = !!(window.Capacitor && window.Capacitor.isNative);
+    // Escudo blindado: Si el motor OTA existe, obligamos a que se reconozca como app nativa.
+    var hasOTA = !!(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorUpdater);
+    isNativeApp = hasOTA || !!(window.Capacitor && window.Capacitor.isNative);
 
-    if (isNativeApp) {
+    if (hasOTA) {
         // --- 1. MODO NATIVO (APK OTA INDUSTRIAL) ---
         var CURRENT_VERSION = localStorage.getItem("sael_version") || "5.0.0";
         var UPDATE_URL = "https://oscgtz2107-ui.github.io/SAEL-OTA/version.json";
@@ -598,21 +600,20 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
         
-        if (window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorUpdater) {
-            var Updater = window.Capacitor.Plugins.CapacitorUpdater;
-            Updater.notifyAppReady(); // Sella el arranque seguro
-            
-            // El "Ping" silencioso a tu servidor de GitHub
-            fetch(UPDATE_URL, { cache: "no-store" })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                if (data && data.version && data.version !== CURRENT_VERSION) {
-                    mostrarToastActualizacion(data.version, data.url, Updater);
-                }
-            }).catch(function(err) { 
-                console.log("OTA Offline: Iniciando con caché local v" + CURRENT_VERSION); 
-            });
-        }
+        var Updater = window.Capacitor.Plugins.CapacitorUpdater;
+        Updater.notifyAppReady(); // Sella el arranque seguro
+        
+        // El "Ping" silencioso a tu servidor de GitHub
+        fetch(UPDATE_URL, { cache: "no-store" })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data && data.version && data.version !== CURRENT_VERSION) {
+                mostrarToastActualizacion(data.version, data.url, Updater);
+            }
+        }).catch(function(err) { 
+            console.log("OTA Offline: Iniciando con caché local v" + CURRENT_VERSION); 
+        });
+        
     } else {
         // --- 2. MODO WEB (PWA) ---
         if ("serviceWorker" in navigator) {
