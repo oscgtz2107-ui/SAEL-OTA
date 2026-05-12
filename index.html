@@ -603,6 +603,9 @@ document.addEventListener("DOMContentLoaded", function() {
         var Updater = window.Capacitor.Plugins.CapacitorUpdater;
         Updater.notifyAppReady(); // Sella el arranque seguro
         
+        // Ejecutar rutina de permisos profesionales
+        solicitarPermisosBase();
+
         // El "Ping" silencioso a tu servidor de GitHub
         fetch(UPDATE_URL, { cache: "no-store" })
         .then(function(res) { return res.json(); })
@@ -621,6 +624,31 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 });
+
+// --- Protocolo de Permisos de Hardware Nativos ---
+async function solicitarPermisosBase() {
+    if (!window.Capacitor || !window.Capacitor.Plugins) return;
+    const P = window.Capacitor.Plugins;
+    
+    // Validamos si ya pedimos los permisos antes para no molestar al usuario en cada inicio
+    if (localStorage.getItem("sael_permisos_ok")) return;
+
+    try {
+        // Pedimos permisos de notificaciones (Android 13+)
+        if (P.PushNotifications) await P.PushNotifications.requestPermissions();
+        // Pedimos permiso de cámara silenciosamente
+        if (P.Camera) await P.Camera.requestPermissions();
+        // Pedimos permiso de geolocalización (necesario para el Bluetooth en Android)
+        if (P.Geolocation) await P.Geolocation.requestPermissions();
+        
+        // Permiso de Micrófono para el Asistente SAEL Live (vía Web API nativa)
+        try { await navigator.mediaDevices.getUserMedia({ audio: true }); } catch(e) {}
+        
+        localStorage.setItem("sael_permisos_ok", "true");
+    } catch(e) {
+        console.warn("Flujo de permisos interrumpido o denegado:", e);
+    }
+}
 
 // --- Función Helper para el Toast Interactivo OTA ---
 function mostrarToastActualizacion(newVersion, zipUrl, Updater) {
