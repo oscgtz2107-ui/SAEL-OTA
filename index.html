@@ -585,12 +585,10 @@ var swReg = null;
 var deferredInstall = null;
 
 document.addEventListener("DOMContentLoaded", function() {
-    // Escudo blindado: Si el motor OTA existe, obligamos a que se reconozca como app nativa.
     var hasOTA = !!(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorUpdater);
     isNativeApp = hasOTA || !!(window.Capacitor && window.Capacitor.isNative);
 
     if (hasOTA) {
-        // --- 1. MODO NATIVO (APK OTA INDUSTRIAL) ---
         var CURRENT_VERSION = localStorage.getItem("sael_version") || "5.0.0";
         var UPDATE_URL = "https://oscgtz2107-ui.github.io/SAEL-OTA/version.json";
 
@@ -601,12 +599,10 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         
         var Updater = window.Capacitor.Plugins.CapacitorUpdater;
-        Updater.notifyAppReady(); // Sella el arranque seguro
+        Updater.notifyAppReady();
         
-        // Ejecutar rutina de permisos profesionales
         solicitarPermisosBase();
 
-        // El "Ping" silencioso a tu servidor de GitHub
         fetch(UPDATE_URL, { cache: "no-store" })
         .then(function(res) { return res.json(); })
         .then(function(data) {
@@ -618,39 +614,38 @@ document.addEventListener("DOMContentLoaded", function() {
         });
         
     } else {
-        // --- 2. MODO WEB (PWA) ---
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker.register("/sw.js").then(function(r){ swReg = r; }).catch(function(){});
         }
     }
 });
 
-// --- Protocolo de Permisos de Hardware Nativos ---
+// --- Protocolo de Permisos de Hardware Nativos (Blindado) ---
 async function solicitarPermisosBase() {
     if (!window.Capacitor || !window.Capacitor.Plugins) return;
     const P = window.Capacitor.Plugins;
     
-    // Validamos si ya pedimos los permisos antes para no molestar al usuario en cada inicio
-    if (localStorage.getItem("sael_permisos_ok")) return;
+    if (localStorage.getItem("sael_permisos_ok") === "true") return;
 
-    try {
-        // Pedimos permisos de notificaciones (Android 13+)
-        if (P.PushNotifications) await P.PushNotifications.requestPermissions();
-        // Pedimos permiso de cámara silenciosamente
-        if (P.Camera) await P.Camera.requestPermissions();
-        // Pedimos permiso de geolocalización (necesario para el Bluetooth en Android)
-        if (P.Geolocation) await P.Geolocation.requestPermissions();
-        
-        // Permiso de Micrófono para el Asistente SAEL Live (vía Web API nativa)
-        try { await navigator.mediaDevices.getUserMedia({ audio: true }); } catch(e) {}
-        
-        localStorage.setItem("sael_permisos_ok", "true");
-    } catch(e) {
-        console.warn("Flujo de permisos interrumpido o denegado:", e);
+    console.log("🚀 Iniciando secuencia de permisos base...");
+
+    // Burbuja 1: Notificaciones Push
+    if (P.PushNotifications) {
+        try { await P.PushNotifications.requestPermissions(); } 
+        catch(e) { console.warn("Fallo Push:", e); }
     }
+
+    // Burbuja 2: Cámara y Almacenamiento
+    if (P.Camera) {
+        try { await P.Camera.requestPermissions(); } 
+        catch(e) { console.warn("Fallo Cámara/Storage:", e); }
+    }
+
+    // Sellamos el cascarón SIN IMPORTAR si hubo errores en los sensores
+    localStorage.setItem("sael_permisos_ok", "true");
+    console.log("✅ Secuencia de permisos base finalizada. Cascarón sellado.");
 }
 
-// --- Función Helper para el Toast Interactivo OTA ---
 function mostrarToastActualizacion(newVersion, zipUrl, Updater) {
     var c = document.getElementById("toast-container");
     var t = document.createElement("div"); 
@@ -671,8 +666,8 @@ function mostrarToastActualizacion(newVersion, zipUrl, Updater) {
         this.style.opacity = "0.7";
         
         Updater.download({ url: zipUrl, version: newVersion }).then(function(dl) {
-            localStorage.setItem("sael_version", newVersion); // Guardamos la nueva versión
-            Updater.set({ id: dl.id }); // ¡Aplica la actualización y reinicia el WebView al instante!
+            localStorage.setItem("sael_version", newVersion);
+            Updater.set({ id: dl.id });
         }).catch(function(e) {
             t.innerHTML = '<span style="color:var(--orange)"><i class="fa-solid fa-triangle-exclamation"></i> Falló la descarga</span>';
             setTimeout(function(){ t.classList.add("fade-out"); setTimeout(function(){t.remove();}, 300); }, 3000);
@@ -1767,12 +1762,25 @@ function toggleLive() {
   else { if (currentAudio) { currentAudio.pause(); currentAudio = null; } if (recognition) { try{ recognition.abort(); }catch(ex){} recognition = null; } liveListening = false; overlay.classList.remove("active","listening","speaking"); btn.classList.remove("active"); setLiveState("idle"); }
 }
 
-function startListening(e) {
+async function startListening(e) {
   if (e) { e.preventDefault(); } if (!liveActive || liveListening) return;
   var talkBtn = document.getElementById("live-talk-btn"); talkBtn.classList.add("pressed");
+  
   if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+
+  // --- INYECCIÓN DE PERMISO DE MICRÓFONO AL VUELO ---
+  try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch(err) {
+      speakJarvis("Necesito permiso para usar el micrófono.");
+      talkBtn.classList.remove("pressed");
+      return;
+  }
+  // --------------------------------------------------
+
   var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) { speakJarvis("Reconocimiento de voz no disponible en este navegador."); talkBtn.classList.remove("pressed"); return; }
+  
   liveListening = true; setLiveState("listening"); var transcript = document.getElementById("live-transcript"); transcript.textContent = "";
 
   var lastFinal = ""; var heardSomething = false; var startTime = Date.now(); var timeout = 5000;
@@ -1807,9 +1815,19 @@ var radarActive = false;
 var radarListenerRef = null;
 var pairingPendingMac = null;
 
-function openRadar() {
+async function openRadar() {
   if (!requireAuth()) return;
   
+  // --- INYECCIÓN DE PERMISOS AL VUELO (GPS Y BLUETOOTH) ---
+  if (isNativeApp && window.Capacitor && window.Capacitor.Plugins) {
+      const P = window.Capacitor.Plugins;
+      try {
+          if (P.Geolocation) await P.Geolocation.requestPermissions();
+          if (P.BluetoothLe) await P.BluetoothLe.initialize();
+      } catch(e) { console.log("Permisos de radar denegados o ya otorgados"); }
+  }
+  // --------------------------------------------------------
+
   document.getElementById("radar-modal").classList.add("active");
   document.getElementById("radar-empty-text").style.display = "block";
   document.getElementById("radar-results").innerHTML = "";
