@@ -601,16 +601,17 @@ document.addEventListener("DOMContentLoaded", function() {
         var Updater = window.Capacitor.Plugins.CapacitorUpdater;
         Updater.notifyAppReady();
         
-        solicitarPermisosBase();
-
-        fetch(UPDATE_URL, { cache: "no-store" })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            if (data && data.version && data.version !== CURRENT_VERSION) {
-                mostrarToastActualizacion(data.version, data.url, Updater);
-            }
-        }).catch(function(err) { 
-            console.log("OTA Offline: Iniciando con caché local v" + CURRENT_VERSION); 
+        // --- PARCHE DE RENDIMIENTO: Evitar Race Condition en Permisos ---
+        solicitarPermisosBase().then(() => {
+            fetch(UPDATE_URL, { cache: "no-store" })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data && data.version && data.version !== CURRENT_VERSION) {
+                    mostrarToastActualizacion(data.version, data.url, Updater);
+                }
+            }).catch(function(err) { 
+                console.log("OTA Offline: Iniciando con caché local v" + CURRENT_VERSION); 
+            });
         });
         
     } else {
@@ -895,6 +896,7 @@ function setConn(ok, label) {
 setTimeout(function() { if (!S.connected) { setConn(false, "Sin conexión"); schedRender(); } }, 10000);
 
 // --- Render Scheduler (Anti-Flicker) ---
+var C = 2*Math.PI*22; 
 function schedRender() {
   if (renderPending) return;
   renderPending = true;
@@ -1101,7 +1103,6 @@ if (sc) {
 // ===========================================================
 // RENDER CORE 5.0 (DOM Diferencial + Scoped Components)
 // ===========================================================
-var C = 2*Math.PI*22; 
 
 function render() {
   var totalGt=0, totalStby=0, totalW=0;
@@ -1735,15 +1736,35 @@ function activarNotificaciones() {
 // MODO LIVE — VOZ JARVIS
 // ===========================================================
 var liveActive = false; var recognition = null; var liveListening = false;
-var EL_KEY   = "sk_1646bccbee9f8679643b1a6278327937638be16144747fa0"; var EL_VOICE = "TX3LPaxmHKxFdv7VOQHJ"; var currentAudio = null;
+var currentAudio = null;
 
 function speakJarvis(text, onEnd) {
   if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-  var clean = text.replace(/[\*\_\[\]]/g,"").replace(/https?:\/\/\S+/g,"").slice(0, 400); setLiveState("speaking");
-  fetch("https://api.elevenlabs.io/v1/text-to-speech/" + EL_VOICE, { method: "POST", headers: { "xi-api-key": EL_KEY, "Content-Type": "application/json", "Accept": "audio/mpeg" }, body: JSON.stringify({ text: clean, model_id: "eleven_multilingual_v2", voice_settings: { stability: 0.92, similarity_boost: 0.85, style: 0.0, use_speaker_boost: true } }) })
-  .then(function(r){ if (!r.ok) throw new Error("ElevenLabs " + r.status); return r.blob(); })
-  .then(function(blob){ var url = URL.createObjectURL(blob); currentAudio = new Audio(url); currentAudio.onended = function(){ URL.revokeObjectURL(url); currentAudio = null; setLiveState("idle"); if (onEnd) onEnd(); }; currentAudio.onerror = function(){ setLiveState("idle"); }; currentAudio.play(); })
-  .catch(function(err){ console.error("ElevenLabs:", err); var utt = new SpeechSynthesisUtterance(clean); utt.lang = "es-MX"; utt.pitch = 0.4; utt.rate = 0.82; utt.onend = function(){ setLiveState("idle"); if (onEnd) onEnd(); }; window.speechSynthesis.speak(utt); });
+  var clean = text.replace(/[\*\_\[\]]/g,"").replace(/https?:\/\/\S+/g,"").slice(0, 400); 
+  setLiveState("speaking");
+  
+  // Petición a nuestro propio Backend en lugar de ElevenLabs directamente
+  fetch(BACKEND + "/tts", { 
+    method: "POST", 
+    headers: { "Content-Type": "application/json" }, 
+    body: JSON.stringify({ token: TOKEN, texto: clean }) 
+  })
+  .then(function(r){ if (!r.ok) throw new Error("Backend TTS falló"); return r.blob(); })
+  .then(function(blob){ 
+    var url = URL.createObjectURL(blob); 
+    currentAudio = new Audio(url); 
+    currentAudio.onended = function(){ URL.revokeObjectURL(url); currentAudio = null; setLiveState("idle"); if (onEnd) onEnd(); }; 
+    currentAudio.onerror = function(){ setLiveState("idle"); }; 
+    currentAudio.play(); 
+  })
+  .catch(function(err){ 
+    console.error("Error de voz:", err); 
+    // Fallback: Voz nativa de Android si falla el internet/servidor
+    var utt = new SpeechSynthesisUtterance(clean); 
+    utt.lang = "es-MX"; utt.pitch = 0.4; utt.rate = 0.82; 
+    utt.onend = function(){ setLiveState("idle"); if (onEnd) onEnd(); }; 
+    window.speechSynthesis.speak(utt); 
+  });
 }
 
 function setLiveState(state) {
