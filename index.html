@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#080c14">
+<meta name="theme-color" id="meta-theme-color" content="#080c14">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SAEL">
@@ -29,16 +29,29 @@
   --font:'Syne',system-ui,sans-serif; --mono:'IBM Plex Mono',monospace;
   --r:12px; --r2:18px;
 }
+
+:root.light-theme {
+  --bg:#f4f6f8; --surface:#ffffff; --surface2:#eef1f5; --surface3:#e4e8ef;
+  --border:rgba(0,0,0,.08); --border2:rgba(0,0,0,.15);
+  --text:#1a1d24; --text2:#5c6b7a; --muted:#8899b0;
+  --teal:#00b38f; --teal-dim:rgba(0,179,143,.1); --teal-glow:rgba(0,179,143,.2);
+}
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html{height:100%;overflow:hidden;-webkit-text-size-adjust:100%;}
-body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;overflow:hidden;}
+body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;overflow:hidden; transition:background 0.3s, color 0.3s;}
 button{font-family:var(--font);cursor:pointer;background:none;border:none;}
 input,select,textarea{font-family:var(--font);}
 ::-webkit-scrollbar{width:2px;} ::-webkit-scrollbar-thumb{background:var(--border2);}
 
 #app{display:flex;flex-direction:column;height:100%;overflow:hidden;}
 
-/* Sidebar & Auth CSS */
+/* Splash Screen */
+#splash-screen { position:fixed; inset:0; background:var(--bg); z-index:99999; display:flex; align-items:center; justify-content:center; transition:opacity 0.4s ease, visibility 0.4s; }
+#splash-screen.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+.splash-logo { font-size:48px; color:var(--teal); text-shadow:0 0 30px var(--teal-glow); animation:pulse 1.5s infinite; }
+
+/* Sidebar */
 #sidebar-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(3px); z-index:8000; opacity:0; pointer-events:none; transition:opacity 0.3s ease; }
 #sidebar-overlay.active { opacity:1; pointer-events:all; }
 #sidebar { position:fixed; top:0; left:0; bottom:0; width:280px; background:var(--surface); z-index:8001; transform:translateX(-100%); transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow:4px 0 24px rgba(0,0,0,0.5); display:flex; flex-direction:column; touch-action:pan-y; }
@@ -50,15 +63,30 @@ input,select,textarea{font-family:var(--font);}
 .sidebar-btn { padding:16px 20px; text-align:left; font-size:13px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:12px; transition:background 0.2s; width:100%; border-bottom:1px solid var(--border); }
 .sidebar-btn:active { background:var(--surface2); color:var(--teal); }
 
-#auth-screen { position:fixed; inset:0; background:var(--bg); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
-.auth-box { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:32px 24px; width:100%; max-width:340px; box-shadow:0 24px 60px rgba(0,0,0,.6); display:flex; flex-direction:column; gap:16px; margin:auto; }
+/* Auth Screen */
+#auth-screen { position:fixed; inset:0; background:var(--bg); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; overflow-y:auto; transition: opacity 0.3s ease; }
+.auth-box { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:32px 24px; width:100%; max-width:340px; box-shadow:0 24px 60px rgba(0,0,0,.6); display:flex; flex-direction:column; margin:auto; align-items:center; }
 .auth-logo { text-align:center; font-size:24px; font-weight:800; color:var(--text); letter-spacing:2px; margin-bottom:8px; }
 .auth-logo i { font-size:40px; color:var(--teal); text-shadow:0 0 20px var(--teal-glow); display:block; margin-bottom:12px; }
-.auth-title { font-size:14px; color:var(--text2); text-align:center; text-transform:uppercase; font-weight:700; margin-bottom:8px; }
-.auth-input { width:100%; padding:14px 16px; background:rgba(0,0,0,0.25); border:1px solid var(--border2); border-radius:12px; color:var(--text); font-size:14px; font-weight:600; outline:none; transition:all 0.2s; }
+.auth-title { font-size:14px; color:var(--text2); text-align:center; text-transform:uppercase; font-weight:700; margin-bottom:14px; width:100%; }
+
+.auth-input { width:100%; padding:14px 16px; background:rgba(0,0,0,0.05); border:1px solid var(--border2); border-radius:12px; color:var(--text); font-size:14px; font-weight:600; outline:none; transition:all 0.2s; }
+:root.light-theme .auth-input { background:rgba(255,255,255,0.8); }
 .auth-input:focus { border-color:var(--teal); box-shadow:0 0 0 3px var(--teal-dim); }
-.auth-btn { width:100%; padding:14px; background:var(--teal); color:#070910; border:none; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; transition:all 0.15s; margin-top:8px; }
-.auth-toggle { text-align:center; font-size:12px; color:var(--muted); cursor:pointer; margin-top:8px; }
+
+.auth-pass-wrap { position:relative; width:100%; }
+.auth-pass-wrap input { padding-right: 42px; }
+.auth-eye { position:absolute; right:14px; top:50%; transform:translateY(-50%); color:var(--muted); cursor:pointer; font-size:16px; transition:color 0.2s; padding:4px; }
+.auth-eye:hover, .auth-eye.active { color:var(--teal); }
+
+.auth-forgot { text-align:right; width:100%; font-size:11px; color:var(--teal); cursor:pointer; margin-top:-4px; transition:opacity 0.2s; font-weight:700; }
+.auth-forgot:active { opacity:0.6; }
+
+.auth-btn { width:100%; padding:14px; background:var(--teal); color:#ffffff; border:none; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; transition:all 0.15s; margin-top:4px; }
+:root:not(.light-theme) .auth-btn { color:#070910; }
+.auth-btn:disabled { opacity:0.6; cursor:not-allowed; }
+.auth-toggle { text-align:center; width:100%; font-size:12px; color:var(--text2); cursor:pointer; margin-top:8px; transition:color 0.2s; }
+.auth-toggle:active { color:var(--text); }
 
 /* Status bar */
 #statusbar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:calc(max(env(safe-area-inset-top), 42px) + 8px) 16px 8px 16px;background:var(--surface);border-bottom:1px solid var(--border);}
@@ -84,14 +112,30 @@ input,select,textarea{font-family:var(--font);}
 .screen.active{display:block;}
 #screen-chat.active{display:flex;flex-direction:column;padding:0;}
 #screen-notif.active{display:flex;flex-direction:column;padding:0;}
+#screen-settings.active{display:block;}
 
-/* Energy card (System Master) */
+/* Switch Toggle CSS */
+.switch { position:relative; display:inline-block; width:46px; height:24px; flex-shrink:0; }
+.switch input { opacity:0; width:0; height:0; }
+.slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:var(--surface3); transition:.3s; border-radius:24px; border:1px solid var(--border2); }
+.slider:before { position:absolute; content:""; height:16px; width:16px; left:3px; bottom:3px; background-color:var(--muted); transition:.3s cubic-bezier(0.4, 0.0, 0.2, 1); border-radius:50%; }
+input:checked + .slider { background-color:var(--teal); border-color:var(--teal); }
+input:checked + .slider:before { transform:translateX(22px); background-color:#fff; }
+
+/* Settings Screen */
+.settings-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:8px 16px; margin-bottom:14px; }
+.set-row { display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid var(--border); }
+.set-row:last-child { border-bottom:none; }
+.set-info { display:flex; flex-direction:column; gap:3px; padding-right:12px; }
+.set-title { font-size:13px; font-weight:700; color:var(--text); }
+.set-desc { font-size:10px; color:var(--text2); line-height:1.4; }
+
+/* Energy card */
 .energy-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r2);padding:14px 16px;margin-bottom:12px;cursor:pointer;user-select:none;position:relative;overflow:hidden;}
 .energy-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--blue));opacity:.6;}
 .energy-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
 .energy-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text2);margin-bottom:5px;}
 .energy-value{font-family:var(--mono);font-size:30px;font-weight:600;color:var(--text);line-height:1;letter-spacing:-1px;}
-.energy-sub{font-size:11px;color:var(--text2);margin-top:4px;}
 .energy-toggle{color:var(--muted);font-size:11px;transition:transform .25s;}
 .energy-toggle.open{transform:rotate(180deg);}
 .energy-divider{border:none;border-top:1px solid var(--border);margin:0 0 12px;}
@@ -122,7 +166,6 @@ input,select,textarea{font-family:var(--font);}
 /* Section header */
 .section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
 .section-title{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text2);display:flex;align-items:center;gap:6px;}
-.section-title i{font-size:10px;}
 
 /* Groups */
 .group-section{margin-bottom:14px;}
@@ -204,15 +247,18 @@ input,select,textarea{font-family:var(--font);}
 .input-wrap { position:relative; display:flex; align-items:center; }
 .input-icon { position:absolute; left:14px; font-size:13px; color:var(--muted); transition:color 0.2s; pointer-events:none; }
 .input-wrap:focus-within .input-icon { color:var(--teal); }
-.styled-input { width:100%; padding:11px 14px 11px 38px; background:rgba(0,0,0,0.25); border:1px solid var(--border2); border-radius:11px; color:var(--text); font-size:12px; font-weight:600; outline:none; transition:all 0.2s; appearance:none; -webkit-appearance:none; }
+.styled-input { width:100%; padding:11px 14px 11px 38px; background:rgba(0,0,0,0.05); border:1px solid var(--border2); border-radius:11px; color:var(--text); font-size:12px; font-weight:600; outline:none; transition:all 0.2s; appearance:none; -webkit-appearance:none; }
+:root.light-theme .styled-input { background:rgba(255,255,255,0.8); }
 .styled-input:focus { border-color:var(--teal); box-shadow:0 0 0 3px var(--teal-dim); }
 select.styled-input { background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%238899b0%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat:no-repeat; background-position:right 12px top 50%; background-size:9px auto; }
 select.styled-input option { background:var(--surface2); }
 .days-row { display:flex; gap:2px; background:var(--surface3); padding:4px; border-radius:11px; margin-bottom:16px; }
 .day-btn-local { flex:1; padding:8px 0; text-align:center; font-size:10px; font-weight:700; color:var(--muted); border-radius:8px; cursor:pointer; transition:all 0.2s; user-select:none; }
-.day-btn-local.active { background:var(--teal); color:#07090f; box-shadow:0 2px 8px rgba(0,212,170,0.3); }
+.day-btn-local.active { background:var(--teal); color:#ffffff; box-shadow:0 2px 8px rgba(0,212,170,0.3); }
+:root:not(.light-theme) .day-btn-local.active { color:#07090f; }
 .form-actions { display:flex; gap:8px; }
-.btn-save { flex:1; padding:12px; background:var(--teal); color:#070910; border:none; border-radius:11px; font-size:13px; font-weight:800; cursor:pointer; transition:opacity 0.15s; }
+.btn-save { flex:1; padding:12px; background:var(--teal); color:#ffffff; border:none; border-radius:11px; font-size:13px; font-weight:800; cursor:pointer; transition:opacity 0.15s; }
+:root:not(.light-theme) .btn-save { color:#070910; }
 .btn-save:active { opacity:0.85; }
 .btn-reset-form-local { padding:12px 16px; background:transparent; border:1px solid var(--border); border-radius:11px; color:var(--muted); font-size:13px; cursor:pointer; transition:all 0.2s; }
 .btn-reset-form-local:active { color:var(--red); border-color:var(--red-dim); background:var(--red-dim); transform:scale(0.97); }
@@ -255,7 +301,8 @@ select.styled-input option { background:var(--surface2); }
 #chatInput{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:13px;padding:11px 14px;color:var(--text);font-size:14px;outline:none;resize:none;max-height:100px;min-height:44px;line-height:1.4;transition:border-color .2s;}
 #chatInput:focus{border-color:rgba(0,212,170,.35);}
 #chatInput::placeholder{color:var(--muted);}
-#sendBtn{width:44px;height:44px;border-radius:12px;background:var(--teal);color:#07090f;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s,transform .1s;}
+#sendBtn{width:44px;height:44px;border-radius:12px;background:var(--teal);color:#ffffff;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s,transform .1s;}
+:root:not(.light-theme) #sendBtn { color:#07090f; }
 #sendBtn:active{transform:scale(.93);}
 #sendBtn:disabled{opacity:.4;}
 
@@ -267,6 +314,7 @@ select.styled-input option { background:var(--surface2); }
 #live-overlay{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;}
 #live-overlay.active{display:flex;}
 #live-bg{position:absolute;inset:0;background:rgba(3,5,10,.97);backdrop-filter:blur(20px);}
+:root.light-theme #live-bg{background:rgba(255,255,255,.97);}
 #live-container{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:24px;padding:32px 24px;width:100%;max-width:340px;}
 #live-title{font-size:11px;letter-spacing:.3em;font-family:var(--mono);color:var(--text2);text-transform:uppercase;}
 #live-title span{color:var(--teal);}
@@ -334,7 +382,8 @@ select.styled-input option { background:var(--surface2); }
 .modal-input:focus{border-color:rgba(0,212,170,.5);}
 .modal-hint{font-size:10px;color:var(--muted);font-family:var(--mono);text-align:center;}
 .modal-actions{display:flex;gap:8px;}
-.modal-save{flex:1;padding:13px;background:var(--teal);color:#07090f;border:none;border-radius:11px;font-size:13px;font-weight:800;cursor:pointer;transition:opacity .15s;}
+.modal-save{flex:1;padding:13px;background:var(--teal);color:#ffffff;border:none;border-radius:11px;font-size:13px;font-weight:800;cursor:pointer;transition:opacity .15s;}
+:root:not(.light-theme) .modal-save { color:#07090f; }
 .modal-save:active{opacity:.85;}
 .modal-cancel{padding:13px 16px;background:var(--surface);border:1px solid var(--border);border-radius:11px;color:var(--text2);font-size:13px;cursor:pointer;}
 
@@ -350,14 +399,11 @@ select.styled-input option { background:var(--surface2); }
 .toast.warning{color:var(--orange);border-color:rgba(255,107,53,.3);}
 .toast.error{color:var(--red);border-color:rgba(255,82,82,.3);}
 
-/* Install */
-#install-btn{position:fixed;bottom:80px;right:14px;z-index:90;background:var(--teal);color:#07090f;border:none;border-radius:20px;padding:10px 18px;font-size:12px;font-weight:800;letter-spacing:.5px;display:none;align-items:center;gap:7px;cursor:pointer;box-shadow:0 4px 20px rgba(0,212,170,.4);}
-#install-btn.visible{display:flex;}
-
 /* Radar & Discovery UI */
 .btn-discovery { width:100%; padding:14px; margin-bottom:14px; border-radius:12px; background:var(--teal-dim); border:1px dashed rgba(0,212,170,.3); color:var(--teal); font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:10px; transition:all .2s; cursor:pointer;}
 .btn-discovery:active { transform:scale(.97); background:rgba(0,212,170,.15); }
 #radar-modal { position:fixed; inset:0; background:rgba(7,9,15,.98); backdrop-filter:blur(10px); z-index:9000; display:flex; flex-direction:column; padding:40px 20px; opacity:0; visibility:hidden; pointer-events:none; transition:opacity .25s ease, visibility .25s; }
+:root.light-theme #radar-modal { background:rgba(255,255,255,.98); }
 #radar-modal.active { opacity:1; visibility:visible; pointer-events:all; }
 .radar-header { display:flex; justify-content:space-between; align-items:center; color:var(--text); font-size:16px; font-weight:800; margin-bottom:40px; }
 .radar-header button { color:var(--muted); font-size:20px; transition:color .2s; }
@@ -380,29 +426,89 @@ select.styled-input option { background:var(--surface2); }
 .radar-item.pending .radar-item-status { display:block; }
 .radar-item.pending i { display:none; }
 </style>
+<script>
+// Motor Temático Temprano (Evita parpadeos - V7.5)
+(function(){
+    var isLight = localStorage.getItem('sael_theme') === 'light';
+    if(isLight) {
+        document.documentElement.classList.add('light-theme');
+        var metaTheme = document.getElementById('meta-theme-color');
+        if(metaTheme) metaTheme.setAttribute('content', '#f4f6f8');
+    }
+})();
+
+// ===========================================================
+// HUSO HORARIO (Contexto Global - Sin GPS)
+// ===========================================================
+var USER_TZ = 'America/Mexico_City';
+try { USER_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Mexico_City'; } catch(e) {}
+
+// Conversor Transparente de Husos Horarios
+function convertTimeStr(timeStr, fromTZ, toTZ) {
+    if (!timeStr || !fromTZ || !toTZ || fromTZ === toTZ) return timeStr;
+    try {
+        var pts = timeStr.split(':');
+        var d = new Date();
+        var str1 = d.toLocaleString('en-US', {timeZone: fromTZ, hour12: false});
+        var str2 = d.toLocaleString('en-US', {timeZone: toTZ, hour12: false});
+        var diffMs = new Date(str2).getTime() - new Date(str1).getTime();
+        var targetD = new Date(2000, 0, 1, parseInt(pts[0], 10), parseInt(pts[1], 10), 0);
+        targetD.setTime(targetD.getTime() + diffMs);
+        var outH = targetD.getHours().toString(); if(outH.length<2) outH="0"+outH;
+        var outM = targetD.getMinutes().toString(); if(outM.length<2) outM="0"+outM;
+        return outH + ":" + outM;
+    } catch(e) { return timeStr; }
+}
+</script>
 </head>
 <body>
+
+<div id="splash-screen">
+  <i class="fa-solid fa-bolt splash-logo"></i>
+</div>
 
 <div id="sidebar-overlay"></div>
 <div id="sidebar">
   <div class="sidebar-header">
     <i class="fa-solid fa-circle-user" id="user-avatar"></i>
     <div id="user-info">
-      <div id="user-name">Invitado</div>
-      <div id="user-status">Modo restringido</div>
+      <div id="user-name" data-i18n="guest">Invitado</div>
+      <div id="user-status" data-i18n="restricted_mode">Modo restringido</div>
     </div>
   </div>
-  <button class="sidebar-btn" id="btn-auth-action"><i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión</button>
+  <button class="sidebar-btn" id="btn-auth-action"><i class="fa-solid fa-right-to-bracket"></i> <span data-i18n="menu_login">Iniciar Sesión</span></button>
+  <button class="sidebar-btn" id="btn-sidebar-settings"><i class="fa-solid fa-gear"></i> <span data-i18n="menu_set">Ajustes</span></button>
+  <button class="sidebar-btn" id="btn-delete-account" style="display:none; color:var(--red); border-bottom:none;"><i class="fa-solid fa-user-xmark"></i> <span data-i18n="menu_del">Eliminar mi cuenta</span></button>
 </div>
 
 <div id="auth-screen" style="display:none;">
   <div class="auth-box">
     <div class="auth-logo"><i class="fa-solid fa-bolt"></i><br>SAEL</div>
-    <div class="auth-title" id="auth-title">Iniciar Sesión</div>
-    <input type="email" id="auth-email" class="auth-input" placeholder="Correo electrónico">
-    <input type="password" id="auth-pass" class="auth-input" placeholder="Contraseña">
-    <button id="auth-btn-main" class="auth-btn">Ingresar</button>
-    <div class="auth-toggle" id="auth-toggle">¿No tienes cuenta? Regístrate aquí</div>
+    <div class="auth-title" id="auth-title" data-i18n="menu_login">Iniciar Sesión</div>
+    
+    <div id="auth-form-container" style="display:flex; flex-direction:column; gap:14px; width:100%;">
+        <input type="email" id="auth-email" class="auth-input" placeholder="Correo electrónico" autocomplete="email">
+        <div class="auth-pass-wrap">
+           <input type="password" id="auth-pass" class="auth-input" placeholder="Contraseña" autocomplete="current-password">
+           <i class="fa-solid fa-eye auth-eye" id="toggle-pass"></i>
+        </div>
+        <div class="auth-forgot" id="auth-forgot" data-i18n="auth_forgot">¿Olvidaste tu contraseña?</div>
+        <button id="auth-btn-main" class="auth-btn" data-i18n="auth_enter">Ingresar</button>
+        <div class="auth-toggle" id="auth-toggle" data-i18n="auth_no_account">¿No tienes cuenta? Regístrate aquí</div>
+    </div>
+
+    <div id="auth-resend-box" style="display:none; flex-direction:column; gap:12px; margin-top:4px; padding-top:12px; border-top:1px solid var(--border); width:100%;">
+       <div style="font-size:13px; color:var(--orange); text-align:center; font-weight:700;">
+           <i class="fa-solid fa-envelope-circle-check"></i> <span data-i18n="auth_unverified">Falta verificar tu correo</span>
+       </div>
+       <div style="font-size:11px; color:var(--text2); text-align:center; line-height:1.5;" data-i18n="auth_check_spam">
+           Revisa tu bandeja de entrada o spam. Una vez verificado, vuelve a iniciar sesión.
+       </div>
+       <button id="auth-btn-resend" class="auth-btn" style="background:var(--blue); color:#fff;" data-i18n="auth_resend">Reenviar verificación</button>
+       <button id="auth-btn-logout-limbo" class="auth-btn" style="background:transparent; border:1px solid var(--orange); color:var(--orange); margin-top:4px;" data-i18n="auth_back_login">Volver al Login</button>
+       <button id="auth-btn-cancel-unverified" style="background:none; border:none; color:var(--muted); font-size:11px; text-decoration:underline; cursor:pointer; margin-top:4px; padding:4px; transition:color 0.2s;" data-i18n="auth_cancel_del">Cancelar y borrar cuenta</button>
+    </div>
+
   </div>
 </div>
 
@@ -412,7 +518,7 @@ select.styled-input option { background:var(--surface2); }
       <i class="fa-solid fa-bars" id="btn-menu" style="font-size:16px; color:var(--text); padding:4px; cursor:pointer;"></i>
       <div id="status-conn">
         <div id="conn-dot"></div>
-        <span id="conn-label">Conectando...</span>
+        <span id="conn-label" data-i18n="conn_connecting">Conectando...</span>
       </div>
     </div>
     <span id="status-time"></span>
@@ -420,14 +526,14 @@ select.styled-input option { background:var(--surface2); }
 
   <div id="tabbar">
     <button class="tab-btn active" data-tab="dashboard" id="tab-btn-dash">
-      <i class="fa-solid fa-bolt"></i> Sistema
+      <i class="fa-solid fa-bolt"></i> <span data-i18n="tab_sys">Sistema</span>
     </button>
     <button class="tab-btn" data-tab="chat" id="tab-btn-chat">
-      <i class="fa-solid fa-comments"></i> Asistente
+      <i class="fa-solid fa-comments"></i> <span data-i18n="tab_chat">Asistente</span>
     </button>
     <button class="tab-btn" data-tab="notif" id="tab-btn-notif">
       <i class="fa-solid fa-bell"></i>
-      <span id="notif-tab-label">Alertas</span>
+      <span id="notif-tab-label" data-i18n="tab_notif">Alertas</span>
       <span id="notif-badge"></span>
     </button>
   </div>
@@ -437,7 +543,7 @@ select.styled-input option { background:var(--surface2); }
       <div class="energy-card" id="main-energy-card">
         <div class="energy-top">
           <div class="energy-main">
-            <div class="energy-label">Energía Total del Sistema</div>
+            <div class="energy-label" data-i18n="dash_total_energy">Energía Total del Sistema</div>
             <div class="energy-value" id="gt-val"><i class="fa-solid fa-globe" style="color:var(--blue); font-size:24px; margin-right:8px; vertical-align:middle;"></i>0 Wh</div>
           </div>
           <i class="fa-solid fa-chevron-down energy-toggle" id="toggle-icon"></i>
@@ -446,27 +552,27 @@ select.styled-input option { background:var(--surface2); }
         <div class="energy-bottom">
           <div class="energy-standby">
             <i class="fa-solid fa-leaf" style="color:var(--orange)"></i>
-            Standby: <span class="standby-val" id="stby-val">0 Wh</span>
+            <span data-i18n="standby">Standby</span>: <span class="standby-val" id="stby-val">0 Wh</span>
           </div>
           <div class="energy-live" id="live-watts">
-            <span class="live-dot"></span>0W ahora
+            <span class="live-dot"></span>0W
           </div>
         </div>
       </div>
 
       <div class="detail-panel" id="detail-panel">
         <div class="detail-section">
-          <div class="detail-sec-label" style="color:var(--blue)">Consumo activo (Grupos)</div>
+          <div class="detail-sec-label" style="color:var(--blue)" data-i18n="dash_active_groups">Consumo activo (Grupos)</div>
           <div class="detail-rows" id="detail-groups-active"></div>
         </div>
         <div class="detail-section">
-          <div class="detail-sec-label" style="color:var(--orange)">Standby (Grupos)</div>
+          <div class="detail-sec-label" style="color:var(--orange)" data-i18n="dash_standby_groups">Standby (Grupos)</div>
           <div class="detail-rows" id="detail-groups-standby"></div>
         </div>
       </div>
 
       <button class="btn-discovery" data-action="radar-open">
-        <i class="fa-solid fa-radar"></i> Vincular nuevo grupo
+        <i class="fa-solid fa-radar"></i> <span data-i18n="dash_pair_group">Vincular nuevo grupo</span>
       </button>
 
       <div id="groups-container"></div>
@@ -476,7 +582,7 @@ select.styled-input option { background:var(--surface2); }
       <div class="chat-header">
         <div class="chat-avatar"><i class="fa-solid fa-brain"></i></div>
         <div style="flex:1">
-          <div class="chat-name">Asistente</div>
+          <div class="chat-name" data-i18n="chat_assistant">Asistente</div>
           <div class="chat-sub" id="chat-status">IA</div>
         </div>
         <button id="liveBtn" title="Modo Live con voz">
@@ -519,11 +625,11 @@ select.styled-input option { background:var(--surface2); }
 
         <button id="live-talk-btn">
           <i class="fa-solid fa-microphone"></i>
-          <span>Toca para hablar</span>
+          <span data-i18n="live_tap_talk">Toca para hablar</span>
         </button>
 
         <button id="live-close">
-          <i class="fa-solid fa-xmark"></i> Cerrar
+          <i class="fa-solid fa-xmark"></i> <span data-i18n="btn_close">Cerrar</span>
         </button>
       </div>
     </div>
@@ -533,21 +639,60 @@ select.styled-input option { background:var(--surface2); }
         <div class="notif-header-left">
           <div class="notif-avatar"><i class="fa-solid fa-robot"></i></div>
           <div>
-            <div class="notif-title">Alertas</div>
+            <div class="notif-title" data-i18n="tab_notif">Alertas</div>
           </div>
         </div>
         <button class="notif-clear" id="btn-clear-notifs">
-          <i class="fa-solid fa-trash-can"></i> Borrar
+          <i class="fa-solid fa-trash-can"></i> <span data-i18n="btn_clear">Borrar</span>
         </button>
       </div>
       <div class="notif-list" id="notif-list"></div>
     </div>
+
+    <div class="screen" id="screen-settings">
+      <div class="section-hdr" style="margin-bottom:16px;">
+        <div class="section-title" style="font-size:12px; color:var(--teal)"><i class="fa-solid fa-gear"></i> <span data-i18n="menu_set">Ajustes</span></div>
+      </div>
+      <div class="settings-card">
+        <div class="set-row">
+          <div class="set-info">
+            <div class="set-title" data-i18n="set_notif">Notificaciones Push</div>
+            <div class="set-desc" data-i18n="set_notif_desc">Recibe alertas de voltaje y sistema</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggle-notif" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="set-row">
+          <div class="set-info">
+            <div class="set-title" data-i18n="set_theme">Modo Claro</div>
+            <div class="set-desc" data-i18n="set_theme_desc">Apariencia de la interfaz en tonos claros</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggle-theme">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="set-row">
+          <div class="set-info">
+            <div class="set-title" data-i18n="set_lang">Idioma</div>
+            <div class="set-desc" data-i18n="set_lang_desc">Lenguaje de la aplicación</div>
+          </div>
+          <select class="styled-input" id="sel-lang" style="width:110px; padding:8px 30px 8px 12px; font-size:12px;">
+            <option value="es">Español</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <div id="radar-modal">
   <div class="radar-header">
-    <span id="radar-title">Buscando grupo...</span>
+    <span id="radar-title" data-i18n="radar_searching">Buscando grupo...</span>
     <button data-action="radar-close"><i class="fa-solid fa-xmark"></i></button>
   </div>
   <div class="radar-animation">
@@ -556,16 +701,155 @@ select.styled-input option { background:var(--surface2); }
     <div class="radar-ring r-3"></div>
     <i class="fa-solid fa-microchip radar-center"></i>
   </div>
-  <div id="radar-empty-text" style="text-align:center; color:var(--muted); font-size:13px; margin-top:24px;">No se encontraron dispositivos</div>
+  <div id="radar-empty-text" style="text-align:center; color:var(--muted); font-size:13px; margin-top:24px;" data-i18n="radar_empty">No se encontraron dispositivos</div>
   <div id="radar-results"></div>
 </div>
 
 <div id="toast-container"></div>
-<button id="install-btn">
-  <i class="fa-solid fa-download"></i> Instalar SAEL
-</button>
 
 <script>
+// ===========================================================
+// MOTOR DE INTERNACIONALIZACIÓN (i18n)
+// ===========================================================
+const i18n_dict = {
+  es: {
+     guest: "Invitado", restricted_mode: "Modo restringido", menu_login: "Iniciar Sesión", menu_logout: "Cerrar Sesión", menu_set: "Ajustes", menu_del: "Eliminar mi cuenta",
+     auth_forgot: "¿Olvidaste tu contraseña?", auth_enter: "Ingresar", auth_register: "Registrarse", auth_no_account: "¿No tienes cuenta? Regístrate aquí", auth_has_account: "¿Ya tienes cuenta? Inicia sesión",
+     auth_unverified: "Falta verificar tu correo", auth_check_spam: "Revisa tu bandeja de entrada o spam. Una vez verificado, vuelve a iniciar sesión.", auth_resend: "Reenviar verificación", auth_back_login: "Volver al Login", auth_cancel_del: "Cancelar y borrar cuenta",
+     conn_connecting: "Conectando...", tab_sys: "Sistema", tab_chat: "Asistente", tab_notif: "Alertas",
+     dash_total_energy: "Energía Total del Sistema", dash_active_groups: "Consumo activo (Grupos)", dash_standby_groups: "Standby (Grupos)", dash_pair_group: "Vincular nuevo grupo",
+     chat_assistant: "Asistente", live_tap_talk: "Toca para hablar", btn_close: "Cerrar", btn_clear: "Borrar",
+     set_notif: "Notificaciones Push", set_notif_desc: "Recibe alertas de voltaje y sistema", set_theme: "Modo Claro", set_theme_desc: "Apariencia de la interfaz en tonos claros", set_lang: "Idioma", set_lang_desc: "Lenguaje de la aplicación",
+     radar_searching: "Buscando grupo...", radar_empty: "No se encontraron dispositivos", radar_disconnected: "Desconectado", radar_rejected: "Rechazada", radar_sent: "Solicitud enviada", radar_waiting: "Esperando hardware...",
+     dev_default: "Aparato", turn_on: "Encender", turn_off: "Apagar",
+     active: "Activo", standby: "Standby", ia_analyzing: "✨ IA: Analizando...",
+     alert_low_volt: "Bajo Voltaje", alert_high_volt: "Alto Voltaje", alert_prefix: "ALERTA: ",
+     mode_manual: "Manual", mode_auto: "Auto", mode_saving: "Ahorro",
+     toast_cmd_sent: "Comando enviado", toast_error: "Error", toast_mode: "Modo: ",
+     toast_no_dev: "Sin aparatos", toast_saved: "Guardado", toast_del: "Eliminado", toast_resets: " reseteado(s)",
+     toast_offline: "Sin conexión", toast_perms_denied: "Permisos de alerta denegados",
+     toast_perms_sys: "Ve a los ajustes de tu celular para dar permiso primero",
+     btn_save: "Guardar", lbl_tag: "Etiqueta",
+     sched_system: "Programar Sistema", dash_empty: "Sin dispositivos. Vincúlalo en el radar.", dash_no_conn: "Verifica tu conexión",
+     ia_greeting: "Hola.", live_greeting: "Hola, soy SAEL. ¿En qué te ayudo?",
+     hold_rename: "Mantén presionado para renombrar", reset_energy_title: "Resetear energía", modal_reset_title: "Resetear", modal_reset_msg: "Resetear la energía de",
+     logged_in: "Sesión iniciada"
+  },
+  en: {
+     guest: "Guest", restricted_mode: "Restricted Mode", menu_login: "Login", menu_logout: "Logout", menu_set: "Settings", menu_del: "Delete Account",
+     auth_forgot: "Forgot your password?", auth_enter: "Enter", auth_register: "Register", auth_no_account: "Don't have an account? Register here", auth_has_account: "Already have an account? Login",
+     auth_unverified: "Email verification required", auth_check_spam: "Check your inbox or spam. Once verified, log in again.", auth_resend: "Resend verification", auth_back_login: "Back to Login", auth_cancel_del: "Cancel & delete account",
+     conn_connecting: "Connecting...", tab_sys: "System", tab_chat: "Assistant", tab_notif: "Alerts",
+     dash_total_energy: "System Total Energy", dash_active_groups: "Active Consumption (Groups)", dash_standby_groups: "Standby (Groups)", dash_pair_group: "Pair new group",
+     chat_assistant: "Assistant", live_tap_talk: "Tap to talk", btn_close: "Close", btn_clear: "Clear",
+     set_notif: "Push Notifications", set_notif_desc: "Receive voltage and system alerts", set_theme: "Light Mode", set_theme_desc: "Interface appearance in light tones", set_lang: "Language", set_lang_desc: "Application language",
+     radar_searching: "Searching for group...", radar_empty: "No devices found", radar_disconnected: "Disconnected", radar_rejected: "Rejected", radar_sent: "Request sent", radar_waiting: "Waiting for hardware...",
+     dev_default: "Device", turn_on: "Turn On", turn_off: "Turn Off",
+     active: "Active", standby: "Standby", ia_analyzing: "✨ AI: Analyzing...",
+     alert_low_volt: "Low Voltage", alert_high_volt: "High Voltage", alert_prefix: "ALERT: ",
+     mode_manual: "Manual", mode_auto: "Auto", mode_saving: "Saving",
+     toast_cmd_sent: "Command sent", toast_error: "Error", toast_mode: "Mode: ",
+     toast_no_dev: "No devices", toast_saved: "Saved", toast_del: "Deleted", toast_resets: " reset(s)",
+     toast_offline: "Offline", toast_perms_denied: "Alert permissions denied",
+     toast_perms_sys: "Go to phone settings to grant permission first",
+     btn_save: "Save", lbl_tag: "Label",
+     sched_system: "System Schedule", dash_empty: "No devices. Pair in radar.", dash_no_conn: "Check your connection",
+     ia_greeting: "Hello.", live_greeting: "Hello, I'm SAEL. How can I help you?",
+     hold_rename: "Long press to rename", reset_energy_title: "Reset energy", modal_reset_title: "Reset", modal_reset_msg: "Reset energy for",
+     logged_in: "Logged in"
+  }
+};
+
+function getLang() {
+    var saved = localStorage.getItem('sael_lang');
+    if (saved) return saved;
+    var nav = navigator.language || navigator.userLanguage || '';
+    return nav.startsWith('en') ? 'en' : 'es';
+}
+
+function t(key) {
+    var lang = getLang();
+    return (i18n_dict[lang] && i18n_dict[lang][key]) ? i18n_dict[lang][key] : key;
+}
+
+function applyLanguage(lang) {
+    var els = document.querySelectorAll("[data-i18n]");
+    for(var i=0; i<els.length; i++) {
+        var k = els[i].getAttribute("data-i18n");
+        if(i18n_dict[lang] && i18n_dict[lang][k]) {
+            if(els[i].tagName === 'INPUT' && (els[i].type === 'placeholder' || els[i].type === 'text' || els[i].type === 'time' || els[i].type === 'password' || els[i].type === 'email')) {
+                els[i].placeholder = i18n_dict[lang][k];
+            } else if (els[i].hasAttribute("placeholder")) {
+                els[i].placeholder = i18n_dict[lang][k];
+            } else {
+                els[i].textContent = i18n_dict[lang][k];
+            }
+        }
+    }
+    if(typeof schedRender === 'function') schedRender();
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    var savedLang = getLang();
+    document.getElementById('sel-lang').value = savedLang;
+    applyLanguage(savedLang);
+
+    var isLight = localStorage.getItem('sael_theme') === 'light';
+    document.getElementById('toggle-theme').checked = isLight;
+    
+    var notifEnabled = localStorage.getItem('sael_notif') !== 'false';
+    document.getElementById('toggle-notif').checked = notifEnabled;
+    
+    // Capacitor App State Listener (Actualización del Reloj Nativo al despertar)
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+        window.Capacitor.Plugins.App.addListener('appStateChange', function(state) {
+            if (state.isActive) {
+                try { USER_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Mexico_City'; } catch(e) {}
+                tick(); 
+                schedRender(); // Fuerza el re-render por si el usuario viajó y cambió de huso horario
+            }
+        });
+    }
+});
+
+document.getElementById('sel-lang').addEventListener('change', function(e) {
+    var lang = e.target.value;
+    localStorage.setItem('sael_lang', lang);
+    applyLanguage(lang);
+    if(currentUserUid) {
+        document.getElementById("user-status").textContent = t("logged_in");
+    } else {
+        document.getElementById("user-status").textContent = t("restricted_mode");
+    }
+});
+
+document.getElementById('toggle-theme').addEventListener('change', function(e) {
+    var isLight = e.target.checked;
+    localStorage.setItem('sael_theme', isLight ? 'light' : 'dark');
+    document.documentElement.classList.toggle('light-theme', isLight);
+    var metaTheme = document.getElementById('meta-theme-color');
+    if(metaTheme) metaTheme.setAttribute('content', isLight ? '#f4f6f8' : '#080c14');
+});
+
+document.getElementById('toggle-notif').addEventListener('change', function(e) {
+    var isEnabled = e.target.checked;
+    localStorage.setItem('sael_notif', isEnabled ? 'true' : 'false');
+    if (isEnabled) {
+        activarNotificaciones();
+    } else {
+        var savedKey = localStorage.getItem("sael_fcm_key");
+        if (savedKey && db && currentUserUid) {
+            db.ref(getPath("fcm_tokens/" + savedKey)).remove().catch(function(){});
+        }
+        localStorage.removeItem("sael_fcm_key");
+        toast(t("turn_off"), "info", "bell-slash");
+    }
+});
+
+
+// ===========================================================
+// CONFIGURACIÓN FIREBASE & OTA
+// ===========================================================
 const firebaseConfig = {
   apiKey: "AIzaSyCCOw2FjjnB-vGYastqqgesO52RmduMXCM",
   authDomain: "cocina-inteligente-f94d0.firebaseapp.com",
@@ -578,18 +862,15 @@ const firebaseConfig = {
 
 var BACKEND = "https://cocina-inteligente-ia-1.onrender.com";
 var TOKEN   = "Bas8rr&*.";
-var VAPID   = "eLP8Yv4R58-RbjasDHqvVocNdIqcaPDv8PRnSFuElrg";
 
 var isNativeApp = false;
-var swReg = null;
-var deferredInstall = null;
 
 document.addEventListener("DOMContentLoaded", function() {
     var hasOTA = !!(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorUpdater);
     isNativeApp = hasOTA || !!(window.Capacitor && window.Capacitor.isNative);
 
     if (hasOTA) {
-        var CURRENT_VERSION = localStorage.getItem("sael_version") || "5.0.0";
+        var CURRENT_VERSION = localStorage.getItem("sael_version") || "7.5.0";
         var UPDATE_URL = "https://oscgtz2107-ui.github.io/SAEL-OTA/version.json";
 
         if ("serviceWorker" in navigator) {
@@ -600,8 +881,17 @@ document.addEventListener("DOMContentLoaded", function() {
         
         var Updater = window.Capacitor.Plugins.CapacitorUpdater;
         Updater.notifyAppReady();
+
+        if (window.Capacitor.Plugins.LocalNotifications) {
+            window.Capacitor.Plugins.LocalNotifications.removeAllListeners();
+            window.Capacitor.Plugins.LocalNotifications.addListener('localNotificationActionPerformed', function(action) {
+                if (action.notification.id == 888) {
+                    var btnUpdate = document.getElementById("btn-do-update");
+                    if (btnUpdate) btnUpdate.click();
+                }
+            });
+        }
         
-        // --- PARCHE DE RENDIMIENTO: Evitar Race Condition en Permisos ---
         solicitarPermisosBase().then(() => {
             fetch(UPDATE_URL, { cache: "no-store" })
             .then(function(res) { return res.json(); })
@@ -613,107 +903,146 @@ document.addEventListener("DOMContentLoaded", function() {
                 console.log("OTA Offline: Iniciando con caché local v" + CURRENT_VERSION); 
             });
         });
-        
-    } else {
-        if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.register("/sw.js").then(function(r){ swReg = r; }).catch(function(){});
-        }
     }
 });
 
-// --- Protocolo de Permisos de Hardware Nativos (Blindado) ---
 async function solicitarPermisosBase() {
     if (!window.Capacitor || !window.Capacitor.Plugins) return;
     const P = window.Capacitor.Plugins;
-    
     if (localStorage.getItem("sael_permisos_ok") === "true") return;
-
-    console.log("🚀 Iniciando secuencia de permisos base...");
-
-    // Burbuja 1: Notificaciones Push
-    if (P.PushNotifications) {
-        try { await P.PushNotifications.requestPermissions(); } 
-        catch(e) { console.warn("Fallo Push:", e); }
-    }
-
-    // Burbuja 2: Cámara y Almacenamiento
-    if (P.Camera) {
-        try { await P.Camera.requestPermissions(); } 
-        catch(e) { console.warn("Fallo Cámara/Storage:", e); }
-    }
-
-    // Sellamos el cascarón SIN IMPORTAR si hubo errores en los sensores
+    if (P.Camera) { try { await P.Camera.requestPermissions(); } catch(e) {} }
     localStorage.setItem("sael_permisos_ok", "true");
-    console.log("✅ Secuencia de permisos base finalizada. Cascarón sellado.");
 }
 
 function mostrarToastActualizacion(newVersion, zipUrl, Updater) {
     var c = document.getElementById("toast-container");
-    var t = document.createElement("div"); 
-    t.className = "toast info";
-    t.style.flexDirection = "column"; 
-    t.style.alignItems = "stretch";
+    var tEl = document.createElement("div"); 
+    tEl.className = "toast info";
+    tEl.style.flexDirection = "column"; 
+    tEl.style.alignItems = "stretch";
+    tEl.innerHTML = '<div style="display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-cloud-arrow-down" style="color:var(--teal)"></i><span>Versión ' + newVersion + ' disponible</span></div><button id="btn-do-update" style="margin-top:8px; padding:8px; background:var(--teal); color:#ffffff; border:none; border-radius:8px; font-weight:800; cursor:pointer; transition:all 0.2s;">Actualizar Ahora</button>';
+    c.appendChild(tEl);
     
-    t.innerHTML = '<div style="display:flex; align-items:center; gap:8px;">' +
-                  '<i class="fa-solid fa-cloud-arrow-down" style="color:var(--teal)"></i>' +
-                  '<span>Versión ' + newVersion + ' disponible</span>' +
-                  '</div>' +
-                  '<button id="btn-do-update" style="margin-top:8px; padding:8px; background:var(--teal); color:#07090f; border:none; border-radius:8px; font-weight:800; cursor:pointer; transition:all 0.2s;">Actualizar Ahora</button>';
-    c.appendChild(t);
-    
+    if (window.Capacitor && window.Capacitor.Plugins.LocalNotifications) {
+        window.Capacitor.Plugins.LocalNotifications.schedule({
+            notifications: [{
+                title: "Actualización SAEL Disponible",
+                body: "Toca para instalar la versión " + newVersion,
+                id: 888
+            }]
+        }).catch(function(e){});
+    }
+
     document.getElementById("btn-do-update").addEventListener("click", function() {
-        this.innerText = "Descargando e Instalando...";
-        this.disabled = true;
-        this.style.opacity = "0.7";
-        
+        this.innerText = "..."; this.disabled = true; this.style.opacity = "0.7";
         Updater.download({ url: zipUrl, version: newVersion }).then(function(dl) {
-            localStorage.setItem("sael_version", newVersion);
-            Updater.set({ id: dl.id });
+            localStorage.setItem("sael_version", newVersion); Updater.set({ id: dl.id });
         }).catch(function(e) {
-            t.innerHTML = '<span style="color:var(--orange)"><i class="fa-solid fa-triangle-exclamation"></i> Falló la descarga</span>';
-            setTimeout(function(){ t.classList.add("fade-out"); setTimeout(function(){t.remove();}, 300); }, 3000);
+            tEl.innerHTML = '<span style="color:var(--orange)"><i class="fa-solid fa-triangle-exclamation"></i> Error</span>';
+            setTimeout(function(){ tEl.classList.add("fade-out"); setTimeout(function(){tEl.remove();}, 300); }, 3000);
         });
     });
 }
-
-window.addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); deferredInstall=e; var btn=document.getElementById("install-btn"); if(btn && !isNativeApp) btn.classList.add("visible"); });
-window.addEventListener("appinstalled", function(){ deferredInstall=null; var btn=document.getElementById("install-btn"); if(btn) btn.classList.remove("visible"); toast("SAEL instalado","success","mobile-screen-button"); });
-function installPWA() { if (!deferredInstall) return; deferredInstall.prompt(); deferredInstall.userChoice.then(function(c){ if(c.outcome==="accepted") deferredInstall=null; }); }
 
 var db = null;
 try {
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   db = firebase.database();
-} catch(e) {
-  console.error("Firebase init error:", e);
-}
+} catch(e) { console.error("Firebase init error:", e); }
 
 // ===========================================================
-// SISTEMA DE AUTENTICACIÓN Y MULTI-TENANT (v5.0)
+// SISTEMA DE AUTENTICACIÓN Y ESTADO GLOBAL
 // ===========================================================
 var currentUserUid = null;
-var isFirstAuthCheck = true;
 var isSidebarOpen = false, isAuthOpen = false, isLoginMode = true;
+var forgotCooldown = 0;
+var isAuthProcessing = false; 
 
 function getPath(subPath) { return "usuarios/" + currentUserUid + "/" + subPath; }
-function requireAuth() { 
-    if(!currentUserUid) { toast("Inicia sesión para usar esta función", "warning", "lock"); return false; } 
-    return true; 
-}
+function requireAuth() { if(!currentUserUid) { toast(t("menu_login"), "warning", "lock"); return false; } return true; }
 
 var cacheTimer = null;
 function saveCacheDebounced() {
     clearTimeout(cacheTimer);
     cacheTimer = setTimeout(function() {
-        if(currentUserUid) { try { localStorage.setItem("sael_state_" + currentUserUid, JSON.stringify({groups: S.groups, rules: S.rules, ai: S.ai})); } catch(e){} }
+        if(currentUserUid) { 
+            try { 
+                localStorage.setItem("sael_state_" + currentUserUid, JSON.stringify({groups: S.groups, rules: S.rules, ai: S.ai})); 
+            } catch(e) {
+                if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                    console.warn("Caché lleno, limpiando...");
+                    localStorage.removeItem("sael_state_" + currentUserUid);
+                }
+            } 
+        }
     }, 2000);
 }
 
-function resetAuthUI() { document.getElementById('auth-email').value = ''; document.getElementById('auth-pass').value = ''; }
+function resetAuthUI() { 
+    var passInput = document.getElementById('auth-pass');
+    if (passInput) {
+        passInput.value = ''; 
+        passInput.type = 'password';
+    }
+    var eyeIcon = document.getElementById('toggle-pass');
+    if (eyeIcon) {
+        eyeIcon.classList.replace('fa-eye-slash', 'fa-eye');
+        eyeIcon.classList.remove('active');
+    }
+}
+
+function performHardWipe() {
+    var gc = document.getElementById("groups-container"); if(gc) gc.innerHTML = "";
+    var nl = document.getElementById("notif-list"); if(nl) nl.innerHTML = "";
+    var cm = document.getElementById("chatMessages"); if(cm) cm.innerHTML = "";
+    var dtA = document.getElementById("detail-groups-active"); if(dtA) dtA.innerHTML = "";
+    var dtS = document.getElementById("detail-groups-standby"); if(dtS) dtS.innerHTML = "";
+    var gt = document.getElementById("gt-val"); if(gt) gt.innerHTML = '<i class="fa-solid fa-globe" style="color:var(--blue); font-size:24px; margin-right:8px; vertical-align:middle;"></i>0 Wh';
+    var st = document.getElementById("stby-val"); if(st) st.textContent = "0 Wh";
+    var lw = document.getElementById("live-watts"); if(lw) lw.innerHTML = '<span class="live-dot"></span>0W';
+    
+    if(currentUserUid) { 
+        try { localStorage.removeItem("sael_state_" + currentUserUid); } catch(e){} 
+    }
+    
+    S = { groups:{}, rules:{}, ai:{}, connected:false };
+    activeGroupsList = [];
+    notifItems = {};
+}
+
 function openSidebar() { isSidebarOpen = true; document.getElementById("sidebar").classList.add("open"); document.getElementById("sidebar-overlay").classList.add("active"); history.pushState({menu:'open'},''); }
 function closeSidebarUI() { isSidebarOpen = false; document.getElementById("sidebar").classList.remove("open"); document.getElementById("sidebar-overlay").classList.remove("active"); }
+
 function toggleAuthScreen() { 
-    if(currentUserUid) { firebase.auth().signOut(); closeSidebarUI(); resetAuthUI(); return; } 
+    if(currentUserUid) { 
+        if (!navigator.onLine) { toast(t("toast_offline"), "warning", "wifi"); return; }
+        var savedKey = localStorage.getItem("sael_fcm_key");
+        
+        var doSignOut = function() {
+            performHardWipe();
+            firebase.auth().signOut().then(function() {
+                toast(t("menu_logout"), "info", "right-from-bracket");
+            });
+            closeSidebarUI();
+            resetAuthUI();
+        };
+
+        if (savedKey && db) {
+            var btnAct = document.getElementById("btn-auth-action");
+            var originalHtml = btnAct.innerHTML;
+            btnAct.innerHTML = '<i class="fa-solid fa-spinner fa-spin-css"></i>...';
+            
+            db.ref(getPath("fcm_tokens/" + savedKey)).remove().then(function() {
+                localStorage.removeItem("sael_fcm_key");
+                doSignOut();
+            }).catch(function() {
+                doSignOut(); 
+            });
+        } else {
+            doSignOut();
+        }
+        return; 
+    } 
     isAuthOpen = true; closeSidebarUI(); document.getElementById("auth-screen").style.display = "flex"; document.getElementById("app").style.display = "none"; history.pushState({auth:'open'},''); 
 }
 
@@ -723,46 +1052,353 @@ window.addEventListener('popstate', function(e) {
     else if(radarActive) { closeRadar(); }
 });
 
-var sbEl = document.getElementById("sidebar");
-var sbTx=0, sbSw=false;
+var sbEl = document.getElementById("sidebar"); var sbTx=0, sbSw=false;
 sbEl.addEventListener("touchstart", function(e){ sbTx=e.touches[0].clientX; sbSw=true; },{passive:true});
 sbEl.addEventListener("touchend", function(e){ if(!sbSw)return; sbSw=false; var dx=sbTx-e.changedTouches[0].clientX; if(dx>40 && isSidebarOpen) history.back(); },{passive:true});
 
+function translateAuthError(code) {
+    switch(code) {
+        case 'auth/invalid-email': return t("toast_error");
+        case 'auth/user-disabled': return t("toast_error");
+        case 'auth/user-not-found': return t("toast_error");
+        case 'auth/wrong-password': return t("toast_error");
+        case 'auth/email-already-in-use': return t("toast_error");
+        case 'auth/weak-password': return t("toast_error");
+        case 'auth/network-request-failed': return t("toast_offline");
+        case 'auth/too-many-requests': return t("toast_error");
+        case 'auth/internal-error': return t("toast_error");
+        case 'auth/requires-recent-login': return t("toast_error");
+        default: return t("toast_error");
+    }
+}
+
+function handleAuthSuccess(user) {
+    currentUserUid = user.uid;
+    document.getElementById("user-name").textContent = user.email;
+    var lang = getLang();
+    document.getElementById("user-status").textContent = t("logged_in");
+    document.getElementById("btn-auth-action").innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> <span data-i18n="menu_logout">' + (lang==='en'?'Logout':'Cerrar Sesión') + '</span>';
+    document.getElementById("btn-delete-account").style.display = "flex";
+    
+    document.getElementById("auth-screen").style.display = "none";
+    document.getElementById("app").style.display = "flex";
+    isAuthOpen = false;
+    
+    document.getElementById('auth-title').innerText = isLoginMode ? (lang==='en'?"Login":"Iniciar Sesión") : (lang==='en'?"Register":"Crear Cuenta");
+    document.getElementById('auth-form-container').style.display = "flex";
+    document.getElementById('auth-resend-box').style.display = "none";
+    
+    initDatabaseListeners(); 
+    
+    if(localStorage.getItem('sael_notif') !== 'false') {
+        activarNotificaciones(); 
+    }
+}
+
 firebase.auth().onAuthStateChanged(function(user) {
-    if(isFirstAuthCheck) { document.getElementById("app").style.display = "flex"; isFirstAuthCheck = false; }
-    if(user) {
-        currentUserUid = user.uid;
-        document.getElementById("user-name").textContent = user.email;
-        document.getElementById("user-status").textContent = "Sesión iniciada";
-        document.getElementById("btn-auth-action").innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión';
-        if(isAuthOpen) { history.back(); } 
-        initDatabaseListeners(); 
+    setTimeout(function() { document.getElementById("splash-screen").classList.add("hidden"); }, 300);
+    var lang = getLang();
+    
+    if(user && user.emailVerified) {
+        handleAuthSuccess(user);
     } else {
+        performHardWipe(); 
+        
         currentUserUid = null;
-        document.getElementById("user-name").textContent = "Invitado";
-        document.getElementById("user-status").textContent = "Modo restringido";
-        document.getElementById("btn-auth-action").innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión';
+        document.getElementById("user-name").textContent = (lang==='en'?"Guest":"Invitado");
+        document.getElementById("user-status").textContent = t("restricted_mode");
+        document.getElementById("btn-auth-action").innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> <span data-i18n="menu_login">' + (lang==='en'?"Login":"Iniciar Sesión") + '</span>';
+        document.getElementById("btn-delete-account").style.display = "none";
+        
+        document.getElementById("app").style.display = "none";
+        document.getElementById("auth-screen").style.display = "flex";
+        isAuthOpen = true;
+        
         stopDatabaseListeners();
+        
+        if (user && !user.emailVerified) {
+            document.getElementById('auth-title').innerText = (lang==='en'?"Verification Required":"Verificación Requerida");
+            document.getElementById('auth-form-container').style.display = "none";
+            document.getElementById('auth-resend-box').style.display = "flex";
+        } else {
+            document.getElementById('auth-title').innerText = isLoginMode ? (lang==='en'?"Login":"Iniciar Sesión") : (lang==='en'?"Register":"Crear Cuenta");
+            document.getElementById('auth-form-container').style.display = "flex";
+            document.getElementById('auth-resend-box').style.display = "none";
+            
+            var btnMain = document.getElementById('auth-btn-main');
+            if (btnMain) {
+                btnMain.disabled = false;
+                btnMain.innerText = isLoginMode ? (lang==='en'?"Enter":"Ingresar") : (lang==='en'?"Register":"Registrarse");
+            }
+        }
     }
 });
 
 document.getElementById('auth-toggle').addEventListener('click', function() {
    isLoginMode = !isLoginMode;
-   document.getElementById('auth-title').innerText = isLoginMode ? "Iniciar Sesión" : "Crear Cuenta";
-   document.getElementById('auth-btn-main').innerText = isLoginMode ? "Ingresar" : "Registrarse";
-   this.innerText = isLoginMode ? "¿No tienes cuenta? Regístrate aquí" : "¿Ya tienes cuenta? Inicia sesión";
+   var lang = getLang();
+   document.getElementById('auth-title').innerText = isLoginMode ? (lang==='en'?"Login":"Iniciar Sesión") : (lang==='en'?"Register":"Crear Cuenta");
+   document.getElementById('auth-btn-main').innerText = isLoginMode ? (lang==='en'?"Enter":"Ingresar") : (lang==='en'?"Register":"Registrarse");
+   this.innerText = isLoginMode ? (lang==='en'?"Don't have an account? Register here":"¿No tienes cuenta? Regístrate aquí") : (lang==='en'?"Already have an account? Login":"¿Ya tienes cuenta? Inicia sesión");
+   document.getElementById('auth-forgot').style.display = isLoginMode ? "block" : "none";
+});
+
+document.getElementById('toggle-pass').addEventListener('click', function() {
+    var input = document.getElementById('auth-pass');
+    if (input.type === 'password') {
+        input.type = 'text';
+        this.classList.replace('fa-eye', 'fa-eye-slash');
+        this.classList.add('active');
+    } else {
+        input.type = 'password';
+        this.classList.replace('fa-eye-slash', 'fa-eye');
+        this.classList.remove('active');
+    }
+});
+
+document.getElementById('auth-forgot').addEventListener('click', function() {
+    if (forgotCooldown > 0) return;
+    var email = document.getElementById('auth-email').value.trim().toLowerCase();
+    if(!email) { toast(t("toast_error"), "warning", "envelope"); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast(t("toast_error"), "warning", "triangle-exclamation"); return; }
+    
+    var btn = this;
+    var originalText = btn.innerText;
+    forgotCooldown = 60;
+    btn.style.opacity = "0.5";
+    
+    var cInt = setInterval(function() {
+        forgotCooldown--;
+        btn.innerText = forgotCooldown + "s";
+        if(forgotCooldown <= 0) { clearInterval(cInt); btn.innerText = originalText; btn.style.opacity = "1"; }
+    }, 1000);
+    
+    firebase.auth().sendPasswordResetEmail(email)
+    .then(function() { toast(t("toast_cmd_sent"), "success", "envelope-open-text"); })
+    .catch(function(e) { 
+        toast(translateAuthError(e.code), "error", "triangle-exclamation"); 
+        clearInterval(cInt); forgotCooldown = 0; btn.innerText = originalText; btn.style.opacity = "1"; 
+    });
+});
+
+document.getElementById('auth-btn-resend').addEventListener('click', function() {
+    var user = firebase.auth().currentUser;
+    if(user && !user.emailVerified) {
+        var btn = this; var origText = btn.innerText;
+        btn.disabled = true; btn.innerText = "...";
+        user.sendEmailVerification().then(function() {
+            toast(t("toast_cmd_sent"), "success", "envelope");
+        }).catch(function(e) {
+            toast(t("toast_error"), "error", "triangle-exclamation");
+        }).finally(function() { btn.disabled = false; btn.innerText = origText; });
+    }
+});
+
+document.getElementById('auth-btn-logout-limbo').addEventListener('click', function() {
+    if (!navigator.onLine) { toast(t("toast_offline"), "warning", "wifi"); return; }
+    var savedKey = localStorage.getItem("sael_fcm_key");
+    var btn = this; var orig = btn.innerText; btn.innerText = "..."; btn.disabled = true;
+    
+    var finishLogout = function() {
+        firebase.auth().signOut().then(function(){
+            document.getElementById('auth-email').value = '';
+            resetAuthUI();
+            btn.innerText = orig; btn.disabled = false;
+        });
+    };
+
+    if (savedKey && db && currentUserUid) {
+        db.ref(getPath("fcm_tokens/" + savedKey)).remove().then(function() {
+            localStorage.removeItem("sael_fcm_key");
+            finishLogout();
+        }).catch(finishLogout);
+    } else {
+        finishLogout();
+    }
+});
+
+document.getElementById('auth-btn-cancel-unverified').addEventListener('click', function() {
+    if (!navigator.onLine) { toast(t("toast_offline"), "warning", "wifi"); return; }
+    var user = firebase.auth().currentUser;
+    if(user && !user.emailVerified) {
+        var btn = this; btn.disabled = true; btn.innerText = "...";
+        
+        var doDelete = function() {
+            user.delete().then(function() {
+                toast(t("toast_del"), "info", "trash");
+                document.getElementById('auth-email').value = ''; resetAuthUI();
+            }).catch(function(e) {
+                if (e.code === 'auth/requires-recent-login') {
+                    firebase.auth().signOut().then(function(){ resetAuthUI(); }); 
+                } else { 
+                    toast(translateAuthError(e.code), "error", "triangle-exclamation"); 
+                }
+            }).finally(function() { btn.disabled = false; btn.innerText = t("auth_cancel_del"); });
+        };
+
+        var savedKey = localStorage.getItem("sael_fcm_key");
+        if (savedKey && db && currentUserUid) {
+            db.ref(getPath("fcm_tokens/" + savedKey)).remove().then(function() {
+                localStorage.removeItem("sael_fcm_key");
+                doDelete();
+            }).catch(doDelete);
+        } else {
+            doDelete();
+        }
+    }
+});
+
+document.getElementById('btn-delete-account').addEventListener('click', function() {
+    if(!requireAuth()) return;
+    if (!navigator.onLine) { toast(t("toast_offline"), "warning", "wifi"); return; }
+    closeSidebarUI();
+    confirmModal("¿Estás seguro?<br><strong>Se borrarán tus datos.</strong>", t("btn_clear"), function() {
+        var user = firebase.auth().currentUser;
+        if(!user) return;
+        var uid = user.uid;
+        
+        document.getElementById("btn-auth-action").innerHTML = '<i class="fa-solid fa-spinner fa-spin-css"></i>...';
+
+        db.ref("usuarios/" + uid).remove().then(function() {
+            var savedKey = localStorage.getItem("sael_fcm_key");
+            if(savedKey) localStorage.removeItem("sael_fcm_key");
+            return user.delete();
+        }).then(function() {
+            toast(t("toast_del"), "success", "user-slash");
+            document.getElementById('auth-email').value = '';
+        }).catch(function(e) {
+            if (e.code === 'auth/requires-recent-login') {
+                toast(t("toast_error"), "warning", "lock");
+                var savedKey = localStorage.getItem("sael_fcm_key");
+                if (savedKey && db && currentUserUid) { 
+                    db.ref(getPath("fcm_tokens/" + savedKey)).remove().catch(function(){}); 
+                    localStorage.removeItem("sael_fcm_key"); 
+                }
+                firebase.auth().signOut();
+            } else {
+                toast(translateAuthError(e.code), "error", "triangle-exclamation");
+            }
+            var lang = getLang();
+            document.getElementById("btn-auth-action").innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> <span data-i18n="menu_logout">' + (lang==='en'?'Logout':'Cerrar Sesión') + '</span>';
+        });
+    });
 });
 
 function processAuth() {
-   var email = document.getElementById('auth-email').value.trim();
-   var pass = document.getElementById('auth-pass').value;
-   if(!email || !pass) { toast("Llena los campos", "warning", "triangle-exclamation"); return; }
-   var btn = document.getElementById('auth-btn-main'); btn.disabled = true; btn.innerText = "Procesando...";
-   var promise = isLoginMode ? firebase.auth().signInWithEmailAndPassword(email, pass) : firebase.auth().createUserWithEmailAndPassword(email, pass);
-   promise.catch(function(e) { toast(e.message, "error", "triangle-exclamation"); btn.disabled = false; btn.innerText = isLoginMode ? "Ingresar" : "Registrarse"; });
+   if (isAuthProcessing) return; 
+   
+   var email = document.getElementById('auth-email').value.trim().toLowerCase();
+   var pass = document.getElementById('auth-pass').value.trim(); 
+   
+   if(!email) { toast(t("toast_error"), "warning", "envelope"); return; }
+   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast(t("toast_error"), "warning", "triangle-exclamation"); return; }
+   if(!pass) { toast(t("toast_error"), "warning", "lock"); return; }
+   if(pass.length < 6) { toast(t("toast_error"), "warning", "lock"); return; }
+   
+   if(document.activeElement) document.activeElement.blur(); 
+   
+   isAuthProcessing = true;
+   var btn = document.getElementById('auth-btn-main'); 
+   var originalText = btn.innerText;
+   btn.disabled = true; 
+   btn.innerText = "...";
+   
+   if (isLoginMode) {
+       firebase.auth().signInWithEmailAndPassword(email, pass)
+       .catch(function(e) { 
+           toast(translateAuthError(e.code), "error", "triangle-exclamation"); 
+           btn.disabled = false; btn.innerText = originalText;
+       })
+       .finally(function() { isAuthProcessing = false; });
+   } else {
+       firebase.auth().createUserWithEmailAndPassword(email, pass)
+       .then(function(cred) {
+           cred.user.sendEmailVerification().catch(function(){});
+           toast(t("toast_saved"), "success", "envelope");
+           resetAuthUI(); 
+       })
+       .catch(function(e) { 
+           toast(translateAuthError(e.code), "error", "triangle-exclamation"); 
+           btn.disabled = false; btn.innerText = originalText;
+       })
+       .finally(function() { isAuthProcessing = false; });
+   }
 }
+
 document.getElementById('auth-btn-main').addEventListener('click', processAuth);
-document.getElementById('auth-pass').addEventListener('keydown', function(e){ if(e.key==='Enter') processAuth(); });
+document.getElementById('auth-email').addEventListener('keydown', function(e){ if(e.key==='Enter') { e.preventDefault(); document.getElementById('auth-pass').focus(); } });
+document.getElementById('auth-pass').addEventListener('keydown', function(e){ if(e.key==='Enter') { e.preventDefault(); processAuth(); } });
+
+// ===========================================================
+// SISTEMA DE NOTIFICACIONES NATIVAS APK (Capacitor Push)
+// ===========================================================
+async function activarNotificaciones() {
+    if (!requireAuth()) {
+        document.getElementById('toggle-notif').checked = false;
+        localStorage.setItem('sael_notif', 'false');
+        return;
+    }
+    
+    if (!window.Capacitor || !window.Capacitor.Plugins.PushNotifications) {
+        console.warn("Módulo PushNotifications no disponible.");
+        return;
+    }
+    
+    const Push = window.Capacitor.Plugins.PushNotifications;
+    
+    try {
+        let perm = await Push.requestPermissions();
+        if (perm.receive !== 'granted') {
+            document.getElementById('toggle-notif').checked = false;
+            localStorage.setItem('sael_notif', 'false');
+            toast(t("toast_perms_sys"), "warning", "bell-slash");
+            return;
+        }
+        
+        await Push.register();
+        Push.removeAllListeners(); 
+        
+        Push.addListener('registration', function(token) {
+            if(db && currentUserUid) {
+                var fcmToken = token.value;
+                var k = fcmToken.substring(0, 50).replace(/[^a-zA-Z0-9]/g, "_");
+                
+                var savedKey = localStorage.getItem("sael_fcm_key");
+                if (savedKey && savedKey !== k) {
+                    db.ref(getPath("fcm_tokens/" + savedKey)).remove().catch(function(){});
+                }
+                
+                localStorage.setItem("sael_fcm_key", k); 
+                db.ref(getPath("fcm_tokens/" + k)).set({
+                    token: fcmToken,
+                    updatedAt: Date.now(),
+                    platform: "android_apk",
+                    device: navigator.userAgent.substring(0, 80)
+                });
+            }
+        });
+        
+        Push.addListener('registrationError', function(error) {
+            document.getElementById('toggle-notif').checked = false;
+            localStorage.setItem('sael_notif', 'false');
+            toast(t("toast_error"), "error", "triangle-exclamation");
+        });
+        
+        Push.addListener('pushNotificationReceived', function(notification) {
+            toast(t("alert_prefix") + (notification.title || "SAEL"), "warning", "bolt");
+        });
+        
+        Push.addListener('pushNotificationActionPerformed', function(notification) {
+            switchTab('notif'); 
+        });
+        
+    } catch(e) {
+        console.error("Error nativo Push:", e);
+        document.getElementById('toggle-notif').checked = false;
+        localStorage.setItem('sael_notif', 'false');
+        toast(t("toast_error"), "error", "triangle-exclamation");
+    }
+}
 
 // ===========================================================
 // CEREBRO DEL DASHBOARD Y LISTENERS (Multi-Tenant)
@@ -822,14 +1458,15 @@ function initDatabaseListeners() {
   notifRef = db.ref(getPath("notificaciones"));
   notifRef.on("value", function(snap) {
     if(!currentUserUid) return;
-    notifItems = snap.val() || {}; var cnt = Object.keys(notifItems).length;
-    var badge = document.getElementById("notif-badge"); if (badge) { badge.textContent = cnt>0 ? cnt : ""; badge.classList.toggle("visible", cnt>0); }
+    notifItems = snap.val() || {}; 
+    var cnt = Object.keys(notifItems).length;
+    var badge = document.getElementById("notif-badge"); 
+    if (badge) { 
+        badge.textContent = cnt > 0 ? cnt : ""; 
+        if(cnt > 0 && currentTab !== "notif") badge.classList.add("visible");
+        else badge.classList.remove("visible");
+    }
     if (currentTab==="notif") renderNotif();
-  });
-  notifRef.on("child_added", function(snap) {
-    if(!currentUserUid) return;
-    var v = snap.val(); if (!v || !v.message) return;
-    if (!isNativeApp && Notification.permission==="granted" && document.visibilityState!=="visible") { new Notification("SAEL", { body: v.message.replace(/^Asistente SAEL dice que:\s*/i,""), icon:"/icon-192.png", tag:"sael" }); }
   });
 }
 
@@ -866,7 +1503,7 @@ function getDevByMacId(macId) {
      var g = S.groups[activeGroupsList[i].off];
      if(g && g.dev && g.owner_mac) {
         var localId = macId.replace(g.owner_mac+"_", "");
-        if(g.dev[localId]) return { name: g.dev[localId].n || ("Aparato "+localId), absId: Number(activeGroupsList[i].off) + Number(localId), off: activeGroupsList[i].off };
+        if(g.dev[localId]) return { name: g.dev[localId].n || (t("dev_default") + " " + localId), absId: String(activeGroupsList[i].off) + "_" + localId, off: activeGroupsList[i].off };
      }
   }
   return null;
@@ -876,13 +1513,19 @@ function getDevByMacId(macId) {
 function toast(msg, type, icon) {
   type = type||"info"; icon = icon||"circle-info";
   var c = document.getElementById("toast-container");
-  var t = document.createElement("div"); t.className = "toast "+type;
-  t.innerHTML = '<i class="fa-solid fa-'+icon+'"></i><span>'+esc(msg)+'</span>';
-  c.appendChild(t);
-  setTimeout(function() { t.classList.add("fade-out"); setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);}, 280); }, 3000);
+  var tEl = document.createElement("div"); tEl.className = "toast "+type;
+  tEl.innerHTML = '<i class="fa-solid fa-'+icon+'"></i><span>'+esc(msg)+'</span>';
+  c.appendChild(tEl);
+  setTimeout(function() { tEl.classList.add("fade-out"); setTimeout(function(){if(tEl.parentNode)tEl.parentNode.removeChild(tEl);}, 280); }, 3000);
 }
 function showVoltageAlert(msg) { toast(msg, "warning", "triangle-exclamation"); }
-function tick() { var el = document.getElementById("status-time"); if (el) el.textContent = new Date().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit",timeZone:"America/Mexico_City"}); }
+function tick() { 
+    var el = document.getElementById("status-time"); 
+    if (el) {
+        var locale = getLang() === 'en' ? 'en-US' : 'es-MX';
+        el.textContent = new Date().toLocaleTimeString(locale, {hour:"2-digit",minute:"2-digit",timeZone:USER_TZ}); 
+    }
+}
 tick(); setInterval(tick, 15000);
 
 function setConn(ok, label) {
@@ -890,12 +1533,12 @@ function setConn(ok, label) {
   if (!dot || !lbl) return;
   S.connected = ok;
   dot.className = ok ? "live" : ((label||"").indexOf("Sin")>=0 ? "warn" : "");
-  lbl.textContent = label || (ok ? "En vivo" : "Reconectando...");
+  lbl.textContent = label || (ok ? "En vivo" : "...");
 }
 
-setTimeout(function() { if (!S.connected) { setConn(false, "Sin conexión"); schedRender(); } }, 10000);
+setTimeout(function() { if (!S.connected) { setConn(false, t("toast_offline")); schedRender(); } }, 10000);
 
-// --- Render Scheduler (Anti-Flicker) ---
+// --- Render Scheduler ---
 var C = 2*Math.PI*22; 
 function schedRender() {
   if (renderPending) return;
@@ -903,39 +1546,29 @@ function schedRender() {
   requestAnimationFrame(function() { render(); renderPending=false; });
 }
 
-// --- Escudo Receptor Maestro (Event Delegation Purist) ---
+// --- Escudo Receptor Maestro ---
 document.body.addEventListener('click', function(e) {
   if(e.target.closest('#btn-menu')) { openSidebar(); return; }
   if(e.target.closest('#sidebar-overlay')) { if(isSidebarOpen) history.back(); return; }
   if(e.target.closest('#btn-auth-action')) { toggleAuthScreen(); return; }
+  if(e.target.closest('#btn-sidebar-settings')) { switchTab('settings'); return; }
 
-  // --- Controles de Radar de Vinculación ---
   if(e.target.closest('[data-action="radar-open"]')) { openRadar(); return; }
   if(e.target.closest('[data-action="radar-close"]')) { if(radarActive) history.back(); return; }
   
   var rItem = e.target.closest('.radar-item');
-  if(rItem && !rItem.classList.contains('pending')) { 
-    requestPairing(rItem.dataset.mac); 
-    return; 
-  }
+  if(rItem && !rItem.classList.contains('pending')) { requestPairing(rItem.dataset.mac); return; }
 
-  // Tabs Static
   var btnTab = e.target.closest('.tab-btn');
   if(btnTab) { switchTab(btnTab.dataset.tab); return; }
 
-  // Chat/Live Static
   if(e.target.closest('#liveBtn')) { toggleLive(); return; }
   if(e.target.closest('#live-close')) { toggleLive(); return; }
   if(e.target.closest('#sendBtn')) { sendMessage(); return; }
   
-  // Notif Static
   if(e.target.closest('#btn-clear-notifs')) { clearAllNotifs(); return; }
-  if(e.target.closest('#install-btn')) { installPWA(); return; }
-  
-  // Main Card Static
   if(e.target.closest('#main-energy-card')) { toggleDetail(); return; }
   
-  // Programaciones Scoped Locales
   var btnSaveLocal = e.target.closest('.btn-save-rule-local');
   if(btnSaveLocal) { saveRuleLocal(btnSaveLocal.dataset.off); return; }
   
@@ -945,12 +1578,11 @@ document.body.addEventListener('click', function(e) {
   var btnDayLocal = e.target.closest('.day-btn-local');
   if(btnDayLocal) { btnDayLocal.classList.toggle("active"); return; }
 
-  // Tarjetas Dinámicas
   var btnToggle = e.target.closest('.card-btn');
   if(btnToggle && !btnToggle.disabled) {
      if(!requireAuth()) return;
      if(btnToggle.classList.contains("btn-alert") || btnToggle.dataset.alertmsg) {
-         showVoltageAlert(btnToggle.dataset.alertmsg || "Bloqueado por seguridad");
+         showVoltageAlert(btnToggle.dataset.alertmsg || t("toast_error"));
      } else {
          var offT = btnToggle.dataset.off;
          var lidT = btnToggle.dataset.lid;
@@ -968,7 +1600,6 @@ document.body.addEventListener('click', function(e) {
      return;
   }
 
-  // Interacción de Grupos (Acordeón vs Reset)
   var btnReset = e.target.closest('.btn-reset-grp');
   if(btnReset) {
       if(!requireAuth()) return;
@@ -1052,11 +1683,17 @@ var talkBtn = document.getElementById("live-talk-btn");
 if(talkBtn) { talkBtn.addEventListener('pointerdown', startListening); }
 
 // --- Navegación & Swipe ---
-var TAB_DISP = {dashboard:"block", chat:"flex", notif:"flex"};
+var TAB_DISP = {dashboard:"block", chat:"flex", notif:"flex", settings:"block"};
 function switchTab(tab) {
   currentTab = tab;
+  closeSidebarUI(); 
+  
   var btns = document.querySelectorAll(".tab-btn");
-  for (var i=0; i<btns.length; i++) { btns[i].classList.toggle("active", btns[i].getAttribute("data-tab")===tab); }
+  for (var i=0; i<btns.length; i++) { 
+      var isActiveTab = btns[i].getAttribute("data-tab")===tab;
+      btns[i].classList.toggle("active", isActiveTab); 
+  }
+  
   var screens = document.querySelectorAll(".screen");
   for (var i=0; i<screens.length; i++) {
     var id = screens[i].id.replace("screen-","");
@@ -1064,7 +1701,30 @@ function switchTab(tab) {
     screens[i].classList.toggle("active", id===tab);
   }
   if (tab==="chat") setTimeout(scrollChat, 80);
-  if (tab==="notif") renderNotif();
+  if (tab==="notif") {
+      renderNotif();
+      var badge = document.getElementById("notif-badge");
+      if (badge) badge.classList.remove("visible");
+  }
+  
+  if (tab === "settings") {
+      if (window.Capacitor && window.Capacitor.Plugins.PushNotifications) {
+          window.Capacitor.Plugins.PushNotifications.checkPermissions().then(function(perm) {
+              if (perm.receive !== 'granted') {
+                  var tgl = document.getElementById('toggle-notif');
+                  if (tgl && tgl.checked) {
+                      tgl.checked = false;
+                      localStorage.setItem('sael_notif', 'false');
+                      var savedKey = localStorage.getItem("sael_fcm_key");
+                      if (savedKey && db && currentUserUid) {
+                          db.ref(getPath("fcm_tokens/" + savedKey)).remove().catch(function(){});
+                      }
+                      localStorage.removeItem("sael_fcm_key");
+                  }
+              }
+          }).catch(function(){});
+      }
+  }
 }
 
 var tX=0, tY=0, swipeZone=false; var sX=0, sY=0, sLocked=null;
@@ -1074,6 +1734,7 @@ function setupSwipe(el) {
     if (!swipeZone) return; swipeZone=false;
     var dx = tX - e.changedTouches[0].clientX; var dy = Math.abs(tY - e.changedTouches[0].clientY);
     if (Math.abs(dx)<40 || dy>60) return;
+    if (currentTab === "settings") return; 
     var tabs=["dashboard","chat","notif"], i=tabs.indexOf(currentTab);
     if (dx>0 && i<tabs.length-1) switchTab(tabs[i+1]); else if (dx<0 && i>0) switchTab(tabs[i-1]);
   },{passive:true});
@@ -1095,13 +1756,14 @@ if (sc) {
     if (Math.abs(dx)<70 || dy>Math.abs(dx)*.6) return;
     var a = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
     if (a==="input"||a==="textarea"||a==="select") return;
+    if (currentTab === "settings") return;
     var tabs=["dashboard","chat","notif"], i=tabs.indexOf(currentTab);
     if (dx>0 && i<tabs.length-1) switchTab(tabs[i+1]); else if (dx<0 && i>0) switchTab(tabs[i-1]);
   },{passive:true});
 }
 
 // ===========================================================
-// RENDER CORE 5.0 (DOM Diferencial + Scoped Components)
+// RENDER CORE (DOM Diferencial + Scoped Components)
 // ===========================================================
 
 function render() {
@@ -1119,7 +1781,7 @@ function render() {
 
   var gtEl = document.getElementById("gt-val"); if (gtEl) gtEl.innerHTML = '<i class="fa-solid fa-globe" style="color:var(--blue); font-size:24px; margin-right:8px; vertical-align:middle;"></i>' + fmtJ(totalGt);
   var stEl = document.getElementById("stby-val"); if (stEl) stEl.textContent = fmtJ(totalStby);
-  var lwEl = document.getElementById("live-watts"); if (lwEl) lwEl.innerHTML = '<span class="live-dot"></span>'+Math.round(totalW)+'W ahora';
+  var lwEl = document.getElementById("live-watts"); if (lwEl) lwEl.innerHTML = '<span class="live-dot"></span>'+Math.round(totalW)+'W';
 
   if (detailOpen) renderDetail(totalGt, totalStby);
   renderGroups();
@@ -1131,7 +1793,7 @@ function renderDetail(tGt, tSt) {
   var dA = document.getElementById("detail-groups-active"); var dS = document.getElementById("detail-groups-standby");
   if (!dA || !dS) return;
   var totalGt=tGt>.01?tGt:.0001, totalSt=tSt>.01?tSt:.0001;
-  activeGroupsList.sort(function(a,b){return Number(a.off)-Number(b.off);});
+  activeGroupsList.sort(function(a,b){return String(a.off).localeCompare(String(b.off));});
 
   for(var gi=0; gi<activeGroupsList.length; gi++) {
     var grp = activeGroupsList[gi];
@@ -1158,10 +1820,10 @@ function renderDetail(tGt, tSt) {
   }
 }
 
-function confirmModal(msg, onConfirm) {
+function confirmModal(msg, confirmText, onConfirm) {
   closeModal();
   var ov = document.createElement("div"); ov.className = "modal-overlay"; ov.id = "modal-overlay";
-  ov.innerHTML = '<div class="modal-box" style="gap:14px"><div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--red-dim);border:1px solid rgba(255,82,82,.3);margin:0 auto"><i class="fa-solid fa-rotate-left" style="font-size:14px;color:var(--red)"></i></div><div style="font-size:13px;color:var(--text);line-height:1.6;text-align:center">'+msg+'</div><div class="modal-actions"><button id="confirm-ok" class="modal-save" style="background:var(--red);color:#fff">Resetear</button><button id="confirm-cancel" class="modal-cancel">Cancelar</button></div></div>';
+  ov.innerHTML = '<div class="modal-box" style="gap:14px"><div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--red-dim);border:1px solid rgba(255,82,82,.3);margin:0 auto"><i class="fa-solid fa-triangle-exclamation" style="font-size:14px;color:var(--red)"></i></div><div style="font-size:13px;color:var(--text);line-height:1.6;text-align:center">'+msg+'</div><div class="modal-actions"><button id="confirm-ok" class="modal-save" style="background:var(--red);color:#fff">'+confirmText+'</button><button id="confirm-cancel" class="modal-cancel">X</button></div></div>';
   document.body.appendChild(ov);
   document.getElementById("confirm-ok").addEventListener("click", function(){ onConfirm(); closeModal(); });
   document.getElementById("confirm-cancel").addEventListener("click", closeModal);
@@ -1185,8 +1847,8 @@ function renderGroups() {
   var cont = document.getElementById("groups-container");
 
   if (!activeGroupsList.length) {
-    var msg = S.connected ? "Sin dispositivos. Vincula un grupo." : "Verifica tu conexión";
-    cont.innerHTML = '<div class="empty-state"><i class="fa-solid fa-circle-notch fa-spin-css" style="font-size:22px;color:var(--teal);opacity:.7"></i><p>'+msg+'</p></div>';
+    var msg = S.connected ? t("dash_empty") : t("dash_no_conn");
+    cont.innerHTML = '<div class="empty-state"><i class="fa-solid fa-satellite-dish" style="font-size:32px;color:var(--teal);opacity:.7;margin-bottom:8px;"></i><p style="font-weight:700;">'+msg+'</p></div>';
     return;
   }
 
@@ -1194,14 +1856,14 @@ function renderGroups() {
 
   var existing = cont.querySelectorAll("[data-grp]");
   for (var xi=0; xi<existing.length; xi++) {
-    var found = false; for(var gi=0; gi<activeGroupsList.length; gi++) { if(activeGroupsList[gi].off === existing[xi].dataset.grp) found = true; }
+    var found = false; for(var gi=0; gi<activeGroupsList.length; gi++) { if(String(activeGroupsList[gi].off) === String(existing[xi].dataset.grp)) found = true; }
     if (!found) existing[xi].parentNode.removeChild(existing[xi]);
   }
 
-  activeGroupsList.sort(function(a,b){return Number(a.off)-Number(b.off);});
+  activeGroupsList.sort(function(a,b){return String(a.off).localeCompare(String(b.off));});
 
   for (var gi=0; gi<activeGroupsList.length; gi++) {
-    var grp  = activeGroupsList[gi]; var goff = grp.off; var gData = S.groups[goff];
+    var grp  = activeGroupsList[gi]; var goff = String(grp.off); var gData = S.groups[goff];
 
     var sec = cont.querySelector('[data-grp="'+goff+'"]');
     if (!sec) {
@@ -1209,7 +1871,7 @@ function renderGroups() {
       sec.innerHTML =
         '<div class="group-header" data-ghdr="'+goff+'">'
           +'<div class="group-left">'
-            +'<span class="group-name" data-gn="'+goff+'" title="Mantén presionado para renombrar"></span>'
+            +'<span class="group-name" data-gn="'+goff+'" title="'+t("hold_rename")+'"></span>'
             +'<div class="group-stats">'
               +'<span><i class="fa-solid fa-globe" style="color:var(--blue);font-size:9px"></i> <strong data-ggt="'+goff+'">0 Wh</strong></span>'
               +'<span><i class="fa-solid fa-leaf" style="color:var(--orange);font-size:9px"></i> <strong data-gst="'+goff+'">0 Wh</strong></span>'
@@ -1217,36 +1879,35 @@ function renderGroups() {
             +'</div>'
           +'</div>'
           +'<div class="group-actions">'
-            +'<button class="icon-btn btn-reset-grp" data-off="'+goff+'" title="Resetear energía"><i class="fa-solid fa-rotate-left"></i></button>'
+            +'<button class="icon-btn btn-reset-grp" data-off="'+goff+'" title="'+t("reset_energy_title")+'"><i class="fa-solid fa-rotate-left"></i></button>'
             +'<i class="fa-solid fa-chevron-down group-chevron"></i>'
           +'</div>'
         +'</div>'
         +'<div class="group-content" data-gcontent="'+goff+'">'
           +'<div class="group-bk-toggle" data-gbktog="'+goff+'">'
-            +'<i class="fa-solid fa-chart-bar" style="color:var(--teal)"></i> Consumo por aparato <i class="fa-solid fa-chevron-down"></i>'
+            +'<i class="fa-solid fa-chart-bar" style="color:var(--teal)"></i> <span data-din="dash_active_groups">'+t("dash_active_groups")+'</span> <i class="fa-solid fa-chevron-down"></i>'
           +'</div>'
           +'<div class="group-breakdown" data-gbk="'+goff+'">'
-            +'<div class="detail-section"><div class="detail-sec-label" style="color:var(--blue)">Consumo activo</div><div class="detail-rows" data-gbka="'+goff+'"></div></div>'
-            +'<div class="detail-section"><div class="detail-sec-label" style="color:var(--orange)">Standby</div><div class="detail-rows" data-gbks="'+goff+'"></div></div>'
+            +'<div class="detail-section"><div class="detail-sec-label" style="color:var(--blue)" data-din="active">'+t("active")+'</div><div class="detail-rows" data-gbka="'+goff+'"></div></div>'
+            +'<div class="detail-section"><div class="detail-sec-label" style="color:var(--orange)" data-din="standby">'+t("standby")+'</div><div class="detail-rows" data-gbks="'+goff+'"></div></div>'
           +'</div>'
           +'<div class="device-grid" data-gg="'+goff+'"></div>'
           
-          /* --- Inicio de Programaciones Locales Enriquecidas --- */
-          +'<div class="section-hdr" style="margin-top:16px;"><div class="section-title"><i class="fa-regular fa-clock"></i> Programar Sistema</div></div>'
+          +'<div class="section-hdr" style="margin-top:16px;"><div class="section-title"><i class="fa-regular fa-clock"></i> <span data-din="sched_system">'+t("sched_system")+'</span></div></div>'
           +'<div class="sched-form" data-sform="'+goff+'">'
             +'<div class="form-grid">'
               +'<div class="input-wrap"><i class="fa-solid fa-plug input-icon"></i>'
-              +'<select class="styled-input rule-device" data-off="'+goff+'"><option value="" disabled selected>Aparato</option></select></div>'
+              +'<select class="styled-input rule-device" data-off="'+goff+'"><option value="" disabled selected>'+t("dev_default")+'</option></select></div>'
               +'<div class="input-wrap"><i class="fa-solid fa-toggle-on input-icon"></i>'
-              +'<select class="styled-input rule-action" data-off="'+goff+'"><option value="on">Encender</option><option value="off">Apagar</option></select></div>'
+              +'<select class="styled-input rule-action" data-off="'+goff+'"><option value="on">'+t("turn_on")+'</option><option value="off">'+t("turn_off")+'</option></select></div>'
               +'<div class="input-wrap"><i class="fa-solid fa-hourglass-start input-icon"></i>'
               +'<input type="time" class="styled-input rule-start" data-off="'+goff+'" value="07:00"></div>'
               +'<div class="input-wrap"><i class="fa-solid fa-hourglass-end input-icon"></i>'
               +'<input type="time" class="styled-input rule-end" data-off="'+goff+'" value="08:00"></div>'
               +'<div class="input-wrap"><i class="fa-solid fa-layer-group input-icon"></i>'
-              +'<select class="styled-input rule-priority" data-off="'+goff+'"><option value="1">P1 — Estricta</option><option value="2">P2 — Flexible</option></select></div>'
+              +'<select class="styled-input rule-priority" data-off="'+goff+'"><option value="1">P1</option><option value="2">P2</option></select></div>'
               +'<div class="input-wrap"><i class="fa-solid fa-tag input-icon"></i>'
-              +'<input type="text" class="styled-input rule-label" data-off="'+goff+'" placeholder="Etiqueta (Opcional)"></div>'
+              +'<input type="text" class="styled-input rule-label" data-off="'+goff+'" placeholder="'+t("lbl_tag")+'"></div>'
             +'</div>'
             +'<div class="days-row">'
               +'<div class="day-btn-local" data-off="'+goff+'" data-d="0">Do</div>'
@@ -1258,8 +1919,8 @@ function renderGroups() {
               +'<div class="day-btn-local" data-off="'+goff+'" data-d="6">Sa</div>'
             +'</div>'
             +'<div class="form-actions">'
-              +'<button class="btn-save btn-save-rule-local" data-off="'+goff+'"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>'
-              +'<button class="btn-reset-form-local" data-off="'+goff+'" title="Limpiar formulario"><i class="fa-solid fa-eraser"></i></button>'
+              +'<button class="btn-save btn-save-rule-local" data-off="'+goff+'"><i class="fa-solid fa-floppy-disk"></i> <span data-din="btn_save">'+t("btn_save")+'</span></button>'
+              +'<button class="btn-reset-form-local" data-off="'+goff+'"><i class="fa-solid fa-eraser"></i></button>'
             +'</div>'
           +'</div>'
           +'<div class="sched-list-local" data-slist="'+goff+'"></div>'
@@ -1270,6 +1931,14 @@ function renderGroups() {
       var actDays = sec.querySelectorAll('.day-btn-local[data-d="1"], .day-btn-local[data-d="2"], .day-btn-local[data-d="3"], .day-btn-local[data-d="4"], .day-btn-local[data-d="5"]');
       for(var ai=0; ai<actDays.length; ai++) actDays[ai].classList.add("active");
     }
+
+    var ds = sec.querySelectorAll("[data-din]");
+    for(var dii=0; dii<ds.length; dii++) { var k = ds[dii].dataset.din; if(ds[dii].textContent !== t(k)) ds[dii].textContent = t(k); }
+
+    var rAct = sec.querySelector('.rule-action[data-off="'+goff+'"]');
+    if(rAct) { rAct.options[0].text = t("turn_on"); rAct.options[1].text = t("turn_off"); }
+    var rLbl = sec.querySelector('.rule-label[data-off="'+goff+'"]');
+    if(rLbl) rLbl.placeholder = t("lbl_tag");
 
     var gnEl = sec.querySelector('[data-gn="'+goff+'"]'); if (gnEl && gnEl.textContent!==grp.name) gnEl.textContent = grp.name;
     var gtEl = sec.querySelector('[data-ggt="'+goff+'"]'); var gtV  = fmtJ(grp.gt); if (gtEl && gtEl.textContent!==gtV) gtEl.textContent = gtV;
@@ -1282,9 +1951,9 @@ function renderGroups() {
 
     var sel = sec.querySelector('.rule-device[data-off="'+goff+'"]');
     if (sel) {
-      var want = '<option value="" disabled>Aparato</option>';
+      var want = '<option value="" disabled>'+t("dev_default")+'</option>';
       for (var di=0; di<devs.length; di++) {
-         var dnm = esc(devs[di].d.n || "Aparato " + devs[di].localId);
+         var dnm = esc(devs[di].d.n || t("dev_default") + " " + devs[di].localId);
          var dmac = grp.mac ? (grp.mac + "_" + devs[di].localId) : null;
          if(dmac) want += '<option value="'+dmac+'">'+dnm+'</option>';
       }
@@ -1297,7 +1966,7 @@ function renderGroups() {
 
     var oldCards = grid.querySelectorAll("[data-card]");
     for (var ci=0; ci<oldCards.length; ci++) {
-      var found = false; for(var k=0; k<devs.length; k++) { if(devs[k].localId === oldCards[ci].dataset.card) found = true; }
+      var found = false; for(var k=0; k<devs.length; k++) { if(String(devs[k].localId) === String(oldCards[ci].dataset.card)) found = true; }
       if (!found) oldCards[ci].parentNode.removeChild(oldCards[ci]);
     }
 
@@ -1305,19 +1974,19 @@ function renderGroups() {
       var localId = devs[di].localId; var dev = devs[di].d;
 
       var isAlert = dev && dev.alert && dev.alert.tipo;
-      var alertMsg = isAlert ? (dev.alert.tipo === "bajo_voltaje" ? "Bajo Voltaje" : "Alto Voltaje") : "";
+      var alertMsg = isAlert ? (dev.alert.tipo === "bajo_voltaje" ? t("alert_low_volt") : t("alert_high_volt")) : "";
       
       var on   = isCon(dev && dev.con) && !isAlert;
       var w    = Math.round(toNum(dev && dev.w, 0));
       var j    = fmtJ(toNum(dev && dev.j,  0));
       var sb   = fmtJ(toNum(dev && dev.sb, 0));
-      var nm   = esc(dev.n || "Aparato "+localId);
+      var nm   = esc(dev.n || t("dev_default") + " " + localId);
       var mode = String(dev && dev.mode || "manual").toLowerCase();
       var sil  = isCon(dev && dev.silent);
       
       var macId = grp.mac ? (grp.mac + "_" + localId) : null;
       var ai   = macId && S.ai && S.ai[macId] ? S.ai[macId] : {};
-      var aiText = ai.prediction || "Analizando...";
+      var aiText = ai.prediction || t("ia_analyzing");
       
       var pendingKey = goff+"_"+localId;
       var isp  = pending[pendingKey];
@@ -1326,7 +1995,7 @@ function renderGroups() {
       var rClr = isAlert ? "var(--orange)" : (on ? (w>800?"var(--orange)":"var(--teal)") : "var(--muted)");
 
       var modeIcons  = {manual:"wrench", auto:"wand-magic-sparkles", ahorro:"leaf"};
-      var modeLabels = {manual:"Manual", auto:"Auto", ahorro:"Ahorro"};
+      var modeLabels = {manual: t("mode_manual"), auto: t("mode_auto"), ahorro: t("mode_saving")};
       var mI = modeIcons[mode]  || "circle"; var mL = modeLabels[mode] || mode;
 
       var card = grid.querySelector('[data-card="'+localId+'"]');
@@ -1334,7 +2003,7 @@ function renderGroups() {
         card = document.createElement("div"); card.dataset.card = localId;
         card.innerHTML =
           '<div class="card-top">'
-            +'<div class="card-name" data-cname="'+localId+'" data-macid="'+macId+'" data-off="'+goff+'" data-lid="'+localId+'" title="Mantén presionado para renombrar"></div>'
+            +'<div class="card-name" data-cname="'+localId+'" data-macid="'+macId+'" data-off="'+goff+'" data-lid="'+localId+'" title="'+t("hold_rename")+'"></div>'
             +'<div class="card-badges">'
               +'<span class="badge-silent" data-csil="'+localId+'" style="display:none"><i class="fa-solid fa-bell-slash"></i></span>'
               +'<span class="badge-power off" data-cpwr="'+localId+'"><i class="fa-solid fa-power-off"></i></span>'
@@ -1347,10 +2016,10 @@ function renderGroups() {
             +'</div>'
           +'</div>'
           +'<div class="card-energy">'
-            +'<div class="e-item"><span class="e-lbl">Activo</span><span class="e-val" data-cej="'+localId+'"></span></div>'
-            +'<div class="e-item"><span class="e-lbl">Standby</span><span class="e-val" data-ces="'+localId+'"></span></div>'
+            +'<div class="e-item"><span class="e-lbl" data-dinya="'+localId+'"></span><span class="e-val" data-cej="'+localId+'"></span></div>'
+            +'<div class="e-item"><span class="e-lbl" data-dinys="'+localId+'"></span><span class="e-val" data-ces="'+localId+'"></span></div>'
           +'</div>'
-          +'<div style="font-size:9px; color:var(--blue); font-family:var(--mono); text-align:center; margin-top:2px;" data-cai="'+localId+'">✨ IA: Analizando...</div>'
+          +'<div style="font-size:9px; color:var(--blue); font-family:var(--mono); text-align:center; margin-top:2px;" data-cai="'+localId+'"></div>'
           +'<div class="mode-badge" data-cmb="'+localId+'" data-off="'+goff+'" data-lid="'+localId+'"><i data-cmi="'+localId+'"></i><span data-cml="'+localId+'"></span></div>'
           +'<button class="card-btn" data-cb="'+localId+'" data-off="'+goff+'" data-lid="'+localId+'"></button>';
         grid.appendChild(card);
@@ -1372,7 +2041,10 @@ function renderGroups() {
       var cejEl=card.querySelector('[data-cej="'+localId+'"]'); if(cejEl&&cejEl.textContent!==j) cejEl.textContent=j;
       var cesEl=card.querySelector('[data-ces="'+localId+'"]'); if(cesEl&&cesEl.textContent!==sb) cesEl.textContent=sb;
 
-      var caiEl=card.querySelector('[data-cai="'+localId+'"]'); if(caiEl && caiEl.textContent !== "✨ IA: " + aiText) caiEl.textContent = "✨ IA: " + aiText;
+      var yaEl = card.querySelector('[data-dinya="'+localId+'"]'); if(yaEl && yaEl.textContent !== t("active")) yaEl.textContent = t("active");
+      var ysEl = card.querySelector('[data-dinys="'+localId+'"]'); if(ysEl && ysEl.textContent !== t("standby")) ysEl.textContent = t("standby");
+
+      var caiEl=card.querySelector('[data-cai="'+localId+'"]'); if(caiEl && caiEl.textContent !== aiText) caiEl.textContent = aiText;
 
       var cmbEl=card.querySelector('[data-cmb="'+localId+'"]'); if(cmbEl){ var wmb="mode-badge mode-"+mode; if(cmbEl.className!==wmb)cmbEl.className=wmb; }
       var cmiEl=card.querySelector('[data-cmi="'+localId+'"]'); if(cmiEl){ var wmi="fa-solid fa-"+mI; if(cmiEl.className!==wmi)cmiEl.className=wmi; }
@@ -1383,7 +2055,7 @@ function renderGroups() {
         if (!isp) {
           cbEl.disabled=false;
           var wcb="card-btn " + (isAlert ? "btn-alert" : (on ? "btn-on" : "btn-off"));
-          var wtb=isAlert ? alertMsg : (on ? "Apagar" : "Encender");
+          var wtb=isAlert ? alertMsg : (on ? t("turn_off") : t("turn_on"));
           if(cbEl.className!==wcb) cbEl.className=wcb;
           if(cbEl.textContent!==wtb) cbEl.textContent=wtb;
           
@@ -1401,7 +2073,7 @@ function renderGroups() {
       var grpGt=grp.gt>.01?grp.gt:.0001, grpSt=grp.stby>.01?grp.stby:.0001;
       for(var di=0;di<devs.length;di++) {
         var did=devs[di].localId, ddev=devs[di].d;
-        var dnm=esc(ddev.n || "Aparato "+did);
+        var dnm=esc(ddev.n || t("dev_default") + " " + did);
         var djA=toNum(ddev&&ddev.j,0), djS=toNum(ddev&&ddev.sb,0);
         var dpA=clamp((djA/grpGt)*100,0,100).toFixed(1); var dpS=clamp((djS/grpSt)*100,0,100).toFixed(1);
         var dwW=Math.round(toNum(ddev&&ddev.w,0));
@@ -1433,8 +2105,8 @@ function toggleDevice(off, localId, btn) {
   var on = btn.classList.contains("btn-on"); 
   pending[key] = true; btn.disabled = true; btn.textContent = "...";
   db.ref(getPath("groups/"+off+"/dev/"+localId)).update({con:on?"0":"1", control_src:"web", ts:Date.now()})
-    .then(function() { toast("Comando enviado", "success", on?"power-off":"bolt"); })
-    .catch(function() { toast("Error", "error", "triangle-exclamation"); })
+    .then(function() { toast(t("toast_cmd_sent"), "success", on?"power-off":"bolt"); })
+    .catch(function() { toast(t("toast_error"), "error", "triangle-exclamation"); })
     .then(function() { setTimeout(function(){ delete pending[key]; schedRender(); }, 3500); });
 }
 
@@ -1446,24 +2118,24 @@ function cycleMode(off, localId, btn) {
   var next = modes[(modes.indexOf(cur)+1)%modes.length];
   pending[key] = next;
   db.ref(getPath("groups/"+off+"/dev/"+localId)).update({mode:next, control_src:"web", ts:Date.now()})
-    .then(function() { var labels = {manual:"Manual — control directo", auto:"Auto — IA gestiona standby", ahorro:"Ahorro — apaga inactividad"}; toast("Modo: "+(labels[next]||next), "info", "sliders"); })
-    .catch(function() { toast("Error al cambiar modo","error","triangle-exclamation"); })
+    .then(function() { var labels = {manual:t("mode_manual"), auto:t("mode_auto"), ahorro:t("mode_saving")}; toast(t("toast_mode")+(labels[next]||next), "info", "sliders"); })
+    .catch(function() { toast(t("toast_error"),"error","triangle-exclamation"); })
     .then(function() { setTimeout(function(){ delete pending[key]; schedRender(); }, 3500); });
 }
 
 function resetGroupEnergy(off) {
   if (!requireAuth()) return;
   var grp = S.groups[off]; var nm  = (grp && grp.name) || ("Grupo "+off);
-  confirmModal("Resetear la energía de todos los aparatos de<br><strong>"+nm+"</strong>", function(){
+  confirmModal(t("modal_reset_msg")+"<br><strong>"+nm+"</strong>", t("modal_reset_title"), function(){
       var ids2=[], done2=0, ok2=0;
       if(grp.dev) { for(var k in grp.dev) ids2.push(k); }
-      if(!ids2.length){toast("Sin aparatos","warning","circle-info");return;}
+      if(!ids2.length){toast(t("toast_no_dev"),"warning","circle-info");return;}
       for(var i2=0;i2<ids2.length;i2++){
         (function(lId){
-          var absId = Number(off) + Number(lId);
-          fetch(BACKEND+"/reset-energy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:TOKEN,deviceId:absId,tipo:"all",uid:currentUserUid})})
+          var absId = String(off) + "_" + String(lId);
+          fetch(BACKEND+"/reset-energy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:TOKEN,deviceId:absId,tipo:"all",uid:currentUserUid,tz:USER_TZ})})
           .then(function(){ok2++;}).catch(function(){})
-          .then(function(){done2++;if(done2===ids2.length)toast(ok2+" aparato"+(ok2!==1?"s":"")+" reseteado"+(ok2!==1?"s":""),"success","rotate-left");});
+          .then(function(){done2++;if(done2===ids2.length)toast(ok2 + t("toast_resets"),"success","rotate-left");});
         })(ids2[i2]);
       }
   });
@@ -1472,7 +2144,7 @@ function resetGroupEnergy(off) {
 function openNameModal(off, localId, macId, cur) {
   closeModal();
   var ov = document.createElement("div"); ov.className = "modal-overlay"; ov.id = "modal-overlay";
-  ov.innerHTML = '<div class="modal-box"><div class="modal-title">Renombrar aparato</div><input class="modal-input" id="ni-'+macId+'" value="'+esc(cur)+'" maxlength="32" placeholder="Dispositivo" autocomplete="off" autocapitalize="characters"><div class="modal-actions"><button id="modal-save-name" class="modal-save"><i class="fa-solid fa-check"></i> Guardar</button><button id="modal-cancel-name" class="modal-cancel">Cancelar</button></div></div>';
+  ov.innerHTML = '<div class="modal-box"><div class="modal-title">Renombrar</div><input class="modal-input" id="ni-'+macId+'" value="'+esc(cur)+'" maxlength="32" placeholder="..." autocomplete="off" autocapitalize="characters"><div class="modal-actions"><button id="modal-save-name" class="modal-save"><i class="fa-solid fa-check"></i> '+t("btn_save")+'</button><button id="modal-cancel-name" class="modal-cancel">X</button></div></div>';
   document.body.appendChild(ov);
   document.getElementById("modal-save-name").addEventListener("click", function(){ saveDevName(off, localId, macId); });
   document.getElementById("modal-cancel-name").addEventListener("click", closeModal);
@@ -1485,16 +2157,16 @@ function saveDevName(off, localId, macId) {
   if (!requireAuth()) return;
   var inp = document.getElementById("ni-"+macId); if (!inp) return;
   var raw  = inp.value.trim().toUpperCase().slice(0,32); var name = raw.replace(/[^A-Z0-9\s.,;:\-_!?#@ÁÉÍÓÚÜÑ]/g,"").trim();
-  if (!name) { toast("Nombre inválido","warning","triangle-exclamation"); return; }
+  if (!name) { toast(t("toast_error"),"warning","triangle-exclamation"); return; }
   closeModal();
-  db.ref(getPath("groups/"+off+"/dev/"+localId+"/n")).set(name).then(function(){ toast("Renombrado a: "+name,"success","check"); }).catch(function(){ toast("Error al guardar nombre","error","triangle-exclamation"); });
+  db.ref(getPath("groups/"+off+"/dev/"+localId+"/n")).set(name).then(function(){ toast(t("toast_saved")+": "+name,"success","check"); }).catch(function(){ toast(t("toast_error"),"error","triangle-exclamation"); });
 }
 
 function editGroupName(off) {
   var grp = S.groups[off]; var cur = (grp && grp.name) || ("Grupo "+off);
   closeModal();
   var ov = document.createElement("div"); ov.className = "modal-overlay"; ov.id = "modal-overlay";
-  ov.innerHTML = '<div class="modal-box"><div class="modal-title">Renombrar grupo</div><textarea class="modal-input" id="gni-'+off+'" maxlength="64" placeholder="Grupo" autocomplete="off" rows="2" style="resize:none;line-height:1.5;height:auto">'+esc(cur)+'</textarea><div class="modal-actions"><button id="modal-save-grp" class="modal-save"><i class="fa-solid fa-check"></i> Guardar</button><button id="modal-cancel-grp" class="modal-cancel">Cancelar</button></div></div>';
+  ov.innerHTML = '<div class="modal-box"><div class="modal-title">Renombrar</div><textarea class="modal-input" id="gni-'+off+'" maxlength="64" placeholder="..." autocomplete="off" rows="2" style="resize:none;line-height:1.5;height:auto">'+esc(cur)+'</textarea><div class="modal-actions"><button id="modal-save-grp" class="modal-save"><i class="fa-solid fa-check"></i> '+t("btn_save")+'</button><button id="modal-cancel-grp" class="modal-cancel">X</button></div></div>';
   document.body.appendChild(ov);
   document.getElementById("modal-save-grp").addEventListener("click", function(){ saveGroupName(off); });
   document.getElementById("modal-cancel-grp").addEventListener("click", closeModal);
@@ -1508,7 +2180,7 @@ function saveGroupName(off) {
   var inp = document.getElementById("gni-"+off); if (!inp) return;
   var name = inp.value.trim().replace(/[\r\n]+/g,' ').slice(0,64); if (!name) return;
   closeModal();
-  db.ref(getPath("groups/"+off+"/name")).set(name).then(function(){ toast("Grupo renombrado: "+name,"success","check"); }).catch(function(){ toast("Error al renombrar","error","triangle-exclamation"); });
+  db.ref(getPath("groups/"+off+"/name")).set(name).then(function(){ toast(t("toast_saved")+": "+name,"success","check"); }).catch(function(){ toast(t("toast_error"),"error","triangle-exclamation"); });
 }
 
 function closeModal() { var el = document.getElementById("modal-overlay"); if (el && el.parentNode) el.parentNode.removeChild(el); }
@@ -1548,29 +2220,30 @@ function saveRuleLocal(off) {
   var selDays = form.querySelectorAll('.day-btn-local.active');
   var days = []; for(var i=0;i<selDays.length;i++) days.push(Number(selDays[i].getAttribute("data-d")));
 
-  if (!macId) { toast("Selecciona un aparato","warning","triangle-exclamation"); return; }
-  if (!days.length) { toast("Selecciona al menos un día","warning","calendar"); return; }
+  if (!macId) { toast(t("toast_error"),"warning","triangle-exclamation"); return; }
+  if (!days.length) { toast(t("toast_error"),"warning","calendar"); return; }
   
   var ruleId = "rule_"+Date.now();
-  db.ref(getPath("rules/"+macId+"/"+ruleId)).set({ enabled:true, scheduled:true, action:action, start:start, end:end, days:days, etiqueta:etiqueta, priority:priority })
-  .then(function(){ toast("Programación guardada", "success", "check"); resetFormLocal(off); })
-  .catch(function(){ toast("Error al guardar","error","triangle-exclamation"); });
+  db.ref(getPath("rules/"+macId+"/"+ruleId)).set({ enabled:true, scheduled:true, action:action, start:start, end:end, days:days, etiqueta:etiqueta, priority:priority, tz: USER_TZ })
+  .then(function(){ toast(t("toast_saved"), "success", "check"); resetFormLocal(off); })
+  .catch(function(){ toast(t("toast_error"),"error","triangle-exclamation"); });
 }
 
 function deleteSchedule(macId, ruleId) {
   if (!requireAuth()) return;
-  db.ref(getPath("rules/"+macId+"/"+ruleId)).remove().then(function(){ toast("Programación eliminada","success","trash"); }).catch(function(){ toast("Error al eliminar","error","triangle-exclamation"); });
+  db.ref(getPath("rules/"+macId+"/"+ruleId)).remove().then(function(){ toast(t("toast_del"),"success","trash"); }).catch(function(){ toast(t("toast_error"),"error","triangle-exclamation"); });
 }
 
 var _rulesHash = "";
 function renderSchedulesLocal() {
-  var h = JSON.stringify(S.rules||{}) + activeGroupsList.length; if (h===_rulesHash) return; _rulesHash = h;
+  var lang = getLang();
+  var h = JSON.stringify(S.rules||{}) + activeGroupsList.length + lang + USER_TZ; if (h===_rulesHash) return; _rulesHash = h;
 
   var lists = document.querySelectorAll('.sched-list-local');
   for(var i=0; i<lists.length; i++) lists[i].innerHTML = "";
 
   var hasRules = {}; 
-  var DAYS = ["Do","Lu","Ma","Mi","Ju","Vi","Sa"];
+  var DAYS = ["Do","Lu","Ma","Mi","Ju","Vi","Sa"]; 
 
   for (var macId in S.rules) {
     var dev = getDevByMacId(macId); if (!dev) continue;
@@ -1584,9 +2257,13 @@ function renderSchedulesLocal() {
       var r = dr[rId];
       if (r && r.scheduled && r.enabled) {
          hasRules[off] = true;
+         
+         var sStart = r.start ? convertTimeStr(r.start, r.tz, USER_TZ) : "?";
+         var sEnd = r.end ? convertTimeStr(r.end, r.tz, USER_TZ) : "?";
+         
          var dayStr = Array.isArray(r.days) ? r.days.slice().sort(function(a,b){return a-b;}).map(function(d){return DAYS[d]||d;}).join(" ") : "Todos";
          var item = document.createElement("div"); item.className="sched-item";
-         item.innerHTML = '<div class="sched-info"><div class="sched-name">'+esc(dev.name)+(r.etiqueta?" — "+esc(r.etiqueta):"")+'</div><div class="sched-detail">'+dayStr+" · "+(r.start||"?")+"&#8594;"+(r.end||"?")+'</div></div><span class="sched-badge '+(r.action==="on"?"on":"off")+'">'+( r.action==="on"?"ON":"OFF")+'</span><span class="sched-prio">P'+(r.priority||1)+'</span><button class="sched-del" data-macid="'+macId+'" data-rid="'+rId+'"><i class="fa-solid fa-xmark"></i></button>';
+         item.innerHTML = '<div class="sched-info"><div class="sched-name">'+esc(dev.name)+(r.etiqueta?" — "+esc(r.etiqueta):"")+'</div><div class="sched-detail">'+dayStr+" · "+sStart+"&#8594;"+sEnd+'</div></div><span class="sched-badge '+(r.action==="on"?"on":"off")+'">'+( r.action==="on"?"ON":"OFF")+'</span><span class="sched-prio">P'+(r.priority||1)+'</span><button class="sched-del" data-macid="'+macId+'" data-rid="'+rId+'"><i class="fa-solid fa-xmark"></i></button>';
          listEl.appendChild(item);
       }
     }
@@ -1595,7 +2272,7 @@ function renderSchedulesLocal() {
   for(var i=0; i<lists.length; i++) {
      var listOff = lists[i].dataset.slist;
      if(!hasRules[listOff]) {
-         lists[i].innerHTML = '<div class="sched-empty"><i class="fa-regular fa-clock" style="font-size:16px;opacity:.3;display:block;margin-bottom:6px"></i>Sin programaciones locales</div>';
+         lists[i].innerHTML = '<div class="sched-empty"><i class="fa-regular fa-clock" style="font-size:16px;opacity:.3;display:block;margin-bottom:6px"></i>...</div>';
      }
   }
 }
@@ -1615,7 +2292,7 @@ function addMsg(text, type) {
 
 function setThinking(v) {
   thinking = v; var btn = document.getElementById("sendBtn"); if (btn) btn.disabled = v;
-  var s = document.getElementById("chat-status"); if (s) { s.textContent = v?"Pensando...":"IA"; s.classList.toggle("thinking",v); }
+  var s = document.getElementById("chat-status"); if (s) { s.textContent = v?"...":"IA"; s.classList.toggle("thinking",v); }
 }
 
 function sendMessage() {
@@ -1628,16 +2305,23 @@ function sendMessage() {
   document.getElementById("chatMessages").appendChild(td); scrollChat(); setThinking(true);
 
   var histCopy = hist.slice(-10);
-  fetch(BACKEND+"/comando", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({token:TOKEN, texto:text, source:"chat", history:histCopy, uid:currentUserUid}), signal:AbortSignal.timeout(18000) })
+  var lang = getLang();
+  
+  fetch(BACKEND+"/comando", { 
+      method:"POST", 
+      headers:{"Content-Type":"application/json"}, 
+      body:JSON.stringify({token:TOKEN, texto:text, source:"chat", history:histCopy, uid:currentUserUid, lang:lang, tz:USER_TZ}),
+      signal:AbortSignal.timeout(18000) 
+  })
   .then(function(r){ return r.json().catch(function(){return {};}); })
   .then(function(d){
     if (td.parentNode) td.parentNode.removeChild(td);
-    var reply = d.reply || "He procesado tu mensaje."; addMsg(reply,"ai");
-    if (d.tipo==="accion") toast(reply.slice(0,60),"success","bolt");
+    var reply = d.reply || "..."; addMsg(reply,"ai");
+    if (d.tipo==="accion") toast(t("toast_cmd_sent"),"success","bolt");
   })
   .catch(function(e){
     if (td.parentNode) td.parentNode.removeChild(td);
-    var msg = (e.name==="TimeoutError") ? "El servidor tardó demasiado. Intenta de nuevo." : "Sin conexión con el asistente.";
+    var msg = t("toast_error");
     addMsg(msg,"system"); toast(msg,"error","triangle-exclamation");
   }).then(function(){ setThinking(false); });
 }
@@ -1646,22 +2330,18 @@ var chatInput = document.getElementById("chatInput");
 chatInput.addEventListener("input", function(){ this.style.height=""; this.style.height=Math.min(this.scrollHeight,100)+"px"; });
 chatInput.addEventListener("keydown", function(e){ if (e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); sendMessage(); } });
 
-function qp(t) { document.getElementById("chatInput").value=t; document.getElementById("chatInput").focus(); switchTab("chat"); }
+function qp(tInput) { document.getElementById("chatInput").value=tInput; document.getElementById("chatInput").focus(); switchTab("chat"); }
 
 var _chipsKey = "";
 function updateChips() {
   var ch = document.getElementById("chips"); if (!ch) return;
-  var ids = []; for(var i=0; i<activeGroupsList.length; i++) { var g = S.groups[activeGroupsList[i].off]; if(g && g.dev) { for(var lId in g.dev) ids.push(g.dev[lId].n || ("Aparato " + lId)); } }
-  var n0=esc(ids[0] || "Aparato"); var n1=esc(ids[1] || "Aparato"); var k = n0+"|"+n1+"|"+ids.length;
+  var ids = []; for(var i=0; i<activeGroupsList.length; i++) { var g = S.groups[activeGroupsList[i].off]; if(g && g.dev) { for(var lId in g.dev) ids.push(g.dev[lId].n || (t("dev_default") + " " + lId)); } }
+  var n0=esc(ids[0] || t("dev_default")); var n1=esc(ids[1] || t("dev_default")); var k = n0+"|"+n1+"|"+ids.length;
   if (k===_chipsKey) return; _chipsKey = k;
   var chips = [
-    ["Apagar todo",   "apaga todo el sistema",          "power-off"],
-    ["Encender todo", "enciende todo",                   "bolt"],
-    [n0+" ahorro",    "pon "+n0+" en modo ahorro",       "leaf"],
-    [n1+" auto",      "activa modo auto en "+n1,         "wand-magic-sparkles"],
-    ["Ver consumo",   "cuanto hemos consumido?",         "chart-line"],
-    ["Aparatos ON",   "que aparatos estan encendidos?",  "list"],
-    ["Programaciones","tengo programaciones activas?",   "clock"]
+    ["OFF", "apagar", "power-off"],
+    ["ON", "encender", "bolt"],
+    ["?", "consumo", "chart-line"]
   ];
   var html = ""; for (var i=0;i<chips.length;i++) { html += '<div class="chip" data-query="'+chips[i][1]+'">'+chips[i][0]+'</div>'; }
   ch.innerHTML = html;
@@ -1676,19 +2356,20 @@ function renderNotif() {
   var list = document.getElementById("notif-list"); if (!list) return;
   var items = []; for (var k in notifItems) { if (notifItems[k]) items.push([k, notifItems[k]]); }
   items.sort(function(a,b){ return (Number(b[0].split("_")[0])||0)-(Number(a[0].split("_")[0])||0); });
-  if (!items.length) { list.innerHTML='<div class="notif-empty"><i class="fa-solid fa-bell-slash"></i><span>Sin alertas del sistema</span></div>'; return; }
+  if (!items.length) { list.innerHTML='<div class="notif-empty"><i class="fa-solid fa-bell-slash"></i><span>...</span></div>'; return; }
   list.innerHTML = ""; var seenMsgs = {}; 
+  var locale = getLang() === 'en' ? 'en-US' : 'es-MX';
 
   for (var i=0;i<items.length;i++) {
     var key=items[i][0], n=items[i][1]; if (!n) continue;
-    var msg = String(n.message||n.msg||"Sin mensaje"); var cleanMsg = esc(msg.replace(/^Asistente SAEL dice que:\s*/i,""));
+    var msg = String(n.message||n.msg||"..."); var cleanMsg = esc(msg.replace(/^Asistente SAEL dice que:\s*/i,""));
     if (seenMsgs[cleanMsg]) continue; seenMsgs[cleanMsg] = true;
 
     var ic="info", inn="circle-info";
     if(/apag|descon/i.test(msg)){ic="warning";inn="power-off";} else if(/encend|conect/i.test(msg)){ic="action";inn="bolt";} else if(/standby|inactiv/i.test(msg)){ic="warning";inn="clock";} else if(/program/i.test(msg)){ic="action";inn="calendar-check";}
     var ts  = n.timestamp ? new Date(n.timestamp) : new Date(Number(key.split("_")[0])||Date.now());
-    var hora= ts.toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit",timeZone:"America/Mexico_City"});
-    var fec = ts.toLocaleDateString("es-MX",{day:"2-digit",month:"short",timeZone:"America/Mexico_City"});
+    var hora= ts.toLocaleTimeString(locale,{hour:"2-digit",minute:"2-digit",timeZone:USER_TZ});
+    var fec = ts.toLocaleDateString(locale,{day:"2-digit",month:"short",timeZone:USER_TZ});
     
     var item = document.createElement("div"); item.className="notif-item"; item.dataset.key=key;
     item.innerHTML = '<i class="fa-solid fa-'+inn+' notif-icon '+ic+'"></i><div class="notif-body"><div class="notif-msg">'+cleanMsg+'</div><div class="notif-time">'+fec+" · "+hora+'</div></div>';
@@ -1709,27 +2390,7 @@ function renderNotif() {
 function clearAllNotifs() {
   if (!requireAuth()) return;
   if (!Object.keys(notifItems).length) return;
-  db.ref(getPath("notificaciones")).remove().then(function(){ toast("Alertas eliminadas","success","trash-can"); }).catch(function(){ toast("Error al borrar","error","triangle-exclamation"); });
-}
-
-function activarNotificaciones() {
-  if (!requireAuth()) return;
-  if (isNativeApp) { toast("Usa las alertas nativas de tu dispositivo","info","bell"); return; }
-  
-  if (!("Notification" in window)) { toast("Notificaciones no disponibles","warning","bell-slash"); return; }
-  Notification.requestPermission().then(function(perm) {
-    if (perm!=="granted") { toast("Notificaciones bloqueadas","warning","bell-slash"); return; }
-    var s=document.createElement("script"); s.src="https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js";
-    s.onload=function(){
-      try {
-        var m=firebase.messaging();
-        m.getToken({vapidKey:VAPID, serviceWorkerRegistration:swReg}).then(function(t){
-            if(t&&db){ var k=t.substring(0,30).replace(/[^a-zA-Z0-9]/g,"_"); db.ref(getPath("fcm_tokens/"+k)).set({token:t, updatedAt:Date.now(), device:navigator.userAgent.substring(0,80)}); toast("Notificaciones push activadas","success","bell"); }
-          }).catch(function(e){ console.warn("[FCM]",e); });
-      }catch(e){ console.warn("[FCM init]",e); }
-    };
-    document.head.appendChild(s);
-  });
+  db.ref(getPath("notificaciones")).remove().then(function(){ toast(t("toast_del"),"success","trash-can"); }).catch(function(){ toast(t("toast_error"),"error","triangle-exclamation"); });
 }
 
 // ===========================================================
@@ -1743,11 +2404,12 @@ function speakJarvis(text, onEnd) {
   var clean = text.replace(/[\*\_\[\]]/g,"").replace(/https?:\/\/\S+/g,"").slice(0, 400); 
   setLiveState("speaking");
   
-  // Petición a nuestro propio Backend en lugar de ElevenLabs directamente
+  var lang = getLang();
+  
   fetch(BACKEND + "/tts", { 
     method: "POST", 
     headers: { "Content-Type": "application/json" }, 
-    body: JSON.stringify({ token: TOKEN, texto: clean }) 
+    body: JSON.stringify({ token: TOKEN, texto: clean, lang: lang, tz: USER_TZ }) 
   })
   .then(function(r){ if (!r.ok) throw new Error("Backend TTS falló"); return r.blob(); })
   .then(function(blob){ 
@@ -1759,9 +2421,9 @@ function speakJarvis(text, onEnd) {
   })
   .catch(function(err){ 
     console.error("Error de voz:", err); 
-    // Fallback: Voz nativa de Android si falla el internet/servidor
     var utt = new SpeechSynthesisUtterance(clean); 
-    utt.lang = "es-MX"; utt.pitch = 0.4; utt.rate = 0.82; 
+    utt.lang = lang === 'en' ? "en-US" : "es-MX"; 
+    utt.pitch = 0.4; utt.rate = 0.82; 
     utt.onend = function(){ setLiveState("idle"); if (onEnd) onEnd(); }; 
     window.speechSynthesis.speak(utt); 
   });
@@ -1770,64 +2432,69 @@ function speakJarvis(text, onEnd) {
 function setLiveState(state) {
   var overlay = document.getElementById("live-overlay"); var core = document.getElementById("orb-core"); var icon = document.getElementById("orb-icon"); var subtitle = document.getElementById("live-subtitle"); var talkBtn = document.getElementById("live-talk-btn");
   overlay.classList.remove("listening","speaking"); core.classList.remove("listening","speaking"); subtitle.className = "live-idle";
-  if (state === "listening") { overlay.classList.add("listening"); core.classList.add("listening"); icon.className = "fa-solid fa-microphone"; subtitle.textContent = "Escuchando..."; subtitle.className = "listening"; talkBtn.classList.add("pressed"); } 
-  else if (state === "speaking") { overlay.classList.add("speaking"); core.classList.add("speaking"); icon.className = "fa-solid fa-volume-high"; subtitle.textContent = "SAEL respondiendo..."; subtitle.className = "speaking"; talkBtn.classList.remove("pressed"); } 
-  else if (state === "thinking") { icon.className = "fa-solid fa-brain"; subtitle.textContent = "Procesando..."; subtitle.className = "thinking"; talkBtn.classList.remove("pressed"); } 
+  if (state === "listening") { overlay.classList.add("listening"); core.classList.add("listening"); icon.className = "fa-solid fa-microphone"; subtitle.textContent = "..."; subtitle.className = "listening"; talkBtn.classList.add("pressed"); } 
+  else if (state === "speaking") { overlay.classList.add("speaking"); core.classList.add("speaking"); icon.className = "fa-solid fa-volume-high"; subtitle.textContent = "..."; subtitle.className = "speaking"; talkBtn.classList.remove("pressed"); } 
+  else if (state === "thinking") { icon.className = "fa-solid fa-brain"; subtitle.textContent = "..."; subtitle.className = "thinking"; talkBtn.classList.remove("pressed"); } 
   else { icon.className = "fa-solid fa-microphone"; subtitle.textContent = ""; talkBtn.classList.remove("pressed"); }
 }
 
 function toggleLive() {
   if(!requireAuth()) return;
   liveActive = !liveActive; var overlay = document.getElementById("live-overlay"); var btn = document.getElementById("liveBtn");
-  if (liveActive) { overlay.classList.add("active"); btn.classList.add("active"); setLiveState("idle"); document.getElementById("live-transcript").textContent = ""; speakJarvis("Hola, soy SAEL. Puedo encender, apagar, programar y analizar tus dispositivos. ¿En qué te ayudo?"); } 
-  else { if (currentAudio) { currentAudio.pause(); currentAudio = null; } if (recognition) { try{ recognition.abort(); }catch(ex){} recognition = null; } liveListening = false; overlay.classList.remove("active","listening","speaking"); btn.classList.remove("active"); setLiveState("idle"); }
+  if (liveActive) { 
+      overlay.classList.add("active"); btn.classList.add("active"); setLiveState("idle"); document.getElementById("live-transcript").textContent = ""; 
+      speakJarvis(t("live_greeting")); 
+  } else { 
+      if (currentAudio) { currentAudio.pause(); currentAudio = null; } if (recognition) { try{ recognition.abort(); }catch(ex){} recognition = null; } liveListening = false; overlay.classList.remove("active","listening","speaking"); btn.classList.remove("active"); setLiveState("idle"); 
+  }
 }
 
 async function startListening(e) {
   if (e) { e.preventDefault(); } if (!liveActive || liveListening) return;
   var talkBtn = document.getElementById("live-talk-btn"); talkBtn.classList.add("pressed");
-  
   if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-
-  // --- INYECCIÓN DE PERMISO DE MICRÓFONO AL VUELO ---
-  try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-  } catch(err) {
-      speakJarvis("Necesito permiso para usar el micrófono.");
-      talkBtn.classList.remove("pressed");
-      return;
-  }
-  // --------------------------------------------------
-
+  try { await navigator.mediaDevices.getUserMedia({ audio: true }); } 
+  catch(err) { speakJarvis("Error mic."); talkBtn.classList.remove("pressed"); return; }
+  
   var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) { speakJarvis("Reconocimiento de voz no disponible en este navegador."); talkBtn.classList.remove("pressed"); return; }
+  if (!SpeechRecognition) { speakJarvis("Error reg."); talkBtn.classList.remove("pressed"); return; }
+  
+  var lang = getLang(); 
   
   liveListening = true; setLiveState("listening"); var transcript = document.getElementById("live-transcript"); transcript.textContent = "";
-
   var lastFinal = ""; var heardSomething = false; var startTime = Date.now(); var timeout = 5000;
 
   function closeMic(text) { liveListening = false; talkBtn.classList.remove("pressed"); if (recognition) { try{ recognition.stop(); }catch(ex){} recognition = null; } if (text) sendLiveMessageLive(text); }
 
   function initRecognition() {
-    var r = new SpeechRecognition(); r.lang = "es-MX"; r.continuous = false; r.interimResults = true;
+    var r = new SpeechRecognition(); 
+    r.lang = lang === 'en' ? "en-US" : "es-MX"; 
+    r.continuous = false; r.interimResults = true;
     r.onresult = function(ev) { heardSomething = true; var interim = "", final = ""; for (var i = ev.resultIndex; i < ev.results.length; i++) { if (ev.results[i].isFinal) final += ev.results[i][0].transcript; else interim += ev.results[i][0].transcript; } if (final) lastFinal += final; transcript.textContent = lastFinal || interim; };
-    r.onerror = function(ev) { if (ev.error === "aborted") return; var elapsed = Date.now() - startTime; if (!heardSomething && elapsed < timeout) { setTimeout(function() { if (liveListening) { recognition = initRecognition(); recognition.start(); } }, 100); } else if (!heardSomething) { closeMic(null); transcript.textContent = "No te escuché. Toca de nuevo."; setLiveState("idle"); } };
-    r.onend = function() { if (!liveListening) return; var elapsed = Date.now() - startTime; if (heardSomething) { closeMic(lastFinal.trim() || null); if (!lastFinal.trim()) setLiveState("idle"); } else if (elapsed < timeout) { setTimeout(function() { if (liveListening) { recognition = initRecognition(); recognition.start(); } }, 100); } else { closeMic(null); transcript.textContent = "No te escuché. Toca de nuevo."; setLiveState("idle"); } };
+    r.onerror = function(ev) { if (ev.error === "aborted") return; var elapsed = Date.now() - startTime; if (!heardSomething && elapsed < timeout) { setTimeout(function() { if (liveListening) { recognition = initRecognition(); recognition.start(); } }, 100); } else if (!heardSomething) { closeMic(null); transcript.textContent = "..."; setLiveState("idle"); } };
+    r.onend = function() { if (!liveListening) return; var elapsed = Date.now() - startTime; if (heardSomething) { closeMic(lastFinal.trim() || null); if (!lastFinal.trim()) setLiveState("idle"); } else if (elapsed < timeout) { setTimeout(function() { if (liveListening) { recognition = initRecognition(); recognition.start(); } }, 100); } else { closeMic(null); transcript.textContent = "..."; setLiveState("idle"); } };
     return r;
   }
   recognition = initRecognition(); recognition.start();
-  setTimeout(function() { if (liveListening && !heardSomething) { closeMic(null); transcript.textContent = "No te escuché. Toca de nuevo."; setLiveState("idle"); } }, timeout + 500);
+  setTimeout(function() { if (liveListening && !heardSomething) { closeMic(null); transcript.textContent = "..."; setLiveState("idle"); } }, timeout + 500);
 }
 
 function sendLiveMessageLive(text) {
   if (!text) return; setLiveState("thinking"); var histCopy = hist.slice(-6);
-  fetch(BACKEND + "/comando", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({token:TOKEN, texto:text, source:"chat", history:histCopy, uid:currentUserUid}), signal: AbortSignal.timeout(18000) })
+  var lang = getLang(); 
+  
+  fetch(BACKEND + "/comando", { 
+      method: "POST", 
+      headers: {"Content-Type":"application/json"}, 
+      body: JSON.stringify({token:TOKEN, texto:text, source:"chat", history:histCopy, uid:currentUserUid, lang:lang, tz:USER_TZ}),
+      signal: AbortSignal.timeout(18000) 
+  })
   .then(function(r){ return r.json().catch(function(){return {};}); })
-  .then(function(d) { var reply = d.reply || "Procesado."; document.getElementById("live-transcript").textContent = reply; addMsg(text, "user"); addMsg(reply, "ai"); if (d.tipo === "accion") toast(reply.slice(0,60), "success", "bolt"); speakJarvis(reply); })
-  .catch(function() { var msg = "Sin conexión con el asistente."; document.getElementById("live-transcript").textContent = msg; speakJarvis(msg); setLiveState("idle"); });
+  .then(function(d) { var reply = d.reply || "OK."; document.getElementById("live-transcript").textContent = reply; addMsg(text, "user"); addMsg(reply, "ai"); if (d.tipo === "accion") toast(t("toast_cmd_sent"), "success", "bolt"); speakJarvis(reply); })
+  .catch(function() { var msg = t("toast_error"); document.getElementById("live-transcript").textContent = msg; speakJarvis(msg); setLiveState("idle"); });
 }
 
-addMsg("Hola, soy SAEL. Puedo encender, apagar, programar y analizar tus dispositivos. En que te ayudo?","ai");
+addMsg(t("ia_greeting"),"ai");
 
 // ===========================================================
 // MATCHMAKER: PROTOCOLO DE VINCULACIÓN (2FA Físico)
@@ -1839,20 +2506,17 @@ var pairingPendingMac = null;
 async function openRadar() {
   if (!requireAuth()) return;
   
-  // --- INYECCIÓN DE PERMISOS AL VUELO (GPS Y BLUETOOTH) ---
   if (isNativeApp && window.Capacitor && window.Capacitor.Plugins) {
       const P = window.Capacitor.Plugins;
       try {
-          if (P.Geolocation) await P.Geolocation.requestPermissions();
           if (P.BluetoothLe) await P.BluetoothLe.initialize();
-      } catch(e) { console.log("Permisos de radar denegados o ya otorgados"); }
+      } catch(e) {}
   }
-  // --------------------------------------------------------
 
   document.getElementById("radar-modal").classList.add("active");
   document.getElementById("radar-empty-text").style.display = "block";
   document.getElementById("radar-results").innerHTML = "";
-  document.getElementById("radar-title").textContent = "Buscando grupo...";
+  document.getElementById("radar-title").textContent = t("radar_searching");
   
   radarActive = true;
   pairingPendingMac = null;
@@ -1867,8 +2531,8 @@ async function openRadar() {
     
     if (pairingPendingMac && !unclaimed[pairingPendingMac]) {
        pairingPendingMac = null;
-       document.getElementById("radar-title").textContent = "Buscando grupo...";
-       toast("El hardware se desconectó", "warning", "plug-circle-xmark");
+       document.getElementById("radar-title").textContent = t("radar_searching");
+       toast(t("radar_disconnected"), "warning", "plug-circle-xmark");
     }
 
     var resultsDiv = document.getElementById("radar-results");
@@ -1888,16 +2552,15 @@ async function openRadar() {
       
       if (pairingPendingMac === mac && data.solicitud_vinculacion === "rechazada") {
          pairingPendingMac = null;
-         toast("Su solicitud fue rechazada", "error", "circle-xmark");
-         document.getElementById("radar-title").textContent = "Buscando grupo...";
+         toast(t("radar_rejected"), "error", "circle-xmark");
+         document.getElementById("radar-title").textContent = t("radar_searching");
          db.ref("unclaimed_groups/" + mac + "/solicitud_vinculacion").remove();
       }
 
       foundHtml += '<div class="radar-item ' + (isPending ? 'pending' : '') + '" data-mac="' + mac + '">' +
           '<div class="radar-item-info">' +
-            '<span class="radar-item-title">Grupo Encontrado</span>' +
-            '<span class="radar-item-mac">MAC: ' + mac + '</span>' +
-            '<span class="radar-item-status">Confirma en la pantalla LCD de la placa...</span>' +
+            '<span class="radar-item-title">MAC: ' + mac + '</span>' +
+            '<span class="radar-item-status">...</span>' +
           '</div>' +
           '<i class="fa-solid fa-link" style="color:var(--text2);"></i>' +
         '</div>';
@@ -1912,45 +2575,35 @@ function requestPairing(mac) {
   if (pairingPendingMac || !db) return; 
   
   pairingPendingMac = mac;
-  document.getElementById("radar-title").textContent = "Esperando hardware...";
+  document.getElementById("radar-title").textContent = t("radar_waiting");
   
   db.ref("unclaimed_groups/" + mac).update({ solicitud_vinculacion: "pendiente" })
-    .then(function() { 
-      toast("Solicitud enviada. Revisa la pantalla.", "info", "envelope"); 
-    })
+    .then(function() { toast(t("radar_sent"), "info", "envelope"); })
     .catch(function() { 
       pairingPendingMac = null; 
-      document.getElementById("radar-title").textContent = "Buscando grupo...";
-      toast("Error de conexión", "error", "triangle-exclamation"); 
+      document.getElementById("radar-title").textContent = t("radar_searching");
+      toast(t("toast_error"), "error", "triangle-exclamation"); 
     });
 }
 
 function claimDevice(mac, data) {
   var newOffset = "offset_" + Date.now().toString().slice(-6); 
-  var newGroupData = { owner_mac: mac, name: "Nuevo Grupo", gt: 0, stby: 0, v_ac: 127, dev: {} };
+  var newGroupData = { owner_mac: mac, name: "Grupo", gt: 0, stby: 0, v_ac: 127, dev: {} };
 
   db.ref(getPath("groups/" + newOffset)).set(newGroupData)
     .then(function() { return db.ref("unclaimed_groups/" + mac).remove(); })
     .then(function() {
-      history.back(); // Trigger popstate to close radar correctly
-      toast("Grupo vinculado con éxito", "success", "check-double");
+      history.back();
+      toast(t("toast_saved"), "success", "check-double");
     })
-    .catch(function() { 
-      toast("Error en vinculación", "error", "triangle-exclamation"); 
-    });
+    .catch(function() { toast(t("toast_error"), "error", "triangle-exclamation"); });
 }
 
 function closeRadar() {
-  if (pairingPendingMac && db) {
-    db.ref("unclaimed_groups/" + pairingPendingMac + "/solicitud_vinculacion").remove();
-  }
-  radarActive = false;
-  pairingPendingMac = null;
+  if (pairingPendingMac && db) { db.ref("unclaimed_groups/" + pairingPendingMac + "/solicitud_vinculacion").remove(); }
+  radarActive = false; pairingPendingMac = null;
   document.getElementById("radar-modal").classList.remove("active");
-  if (radarListenerRef) { 
-    radarListenerRef.off(); 
-    radarListenerRef = null; 
-  }
+  if (radarListenerRef) { radarListenerRef.off(); radarListenerRef = null; }
 }
 </script>
 </body>
