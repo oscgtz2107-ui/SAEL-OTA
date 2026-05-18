@@ -1,0 +1,33 @@
+name: Compilador SAEL (Desde Repo Privado)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Clonar el código Privado de forma segura
+        uses: actions/checkout@v3
+        with:
+          repository: oscgtz2107-ui/dashboard-app
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+
+      - name: 2. Preparar el motor Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: 3. Dar permisos al compilador
+        run: chmod +x gradlew
+
+      - name: 4. Construir el APK Nativo
+        run: ./gradlew assembleDebug
+
+      - name: 5. Entregar el APK terminado
+        uses: actions/upload-artifact@v3
+        with:
+          name: SAEL-App-Nativa
+          path: app/build/outputs/apk/debug/app-debug.apk
