@@ -14,16 +14,22 @@ jobs:
           repository: oscgtz2107-ui/dashboard-app
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
 
-      - name: 2. Preparar el motor Java
+      - name: 2. Preparar el motor Java 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: 3. Construir el APK (Usando Gradle del Servidor)
-        run: gradle assembleDebug
+      - name: 3. Fabricar el motor Gradle estable (v8.7)
+        run: gradle wrapper --gradle-version 8.7
 
-      - name: 4. Entregar el APK terminado
+      - name: 4. Dar permisos de ejecución
+        run: chmod +x gradlew
+
+      - name: 5. Construir el APK Nativo
+        run: ./gradlew assembleDebug
+
+      - name: 6. Entregar el APK terminado
         uses: actions/upload-artifact@v4
         with:
           name: SAEL-App-Nativa
