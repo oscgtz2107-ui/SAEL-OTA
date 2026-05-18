@@ -20,16 +20,15 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: 3. Fabricar el motor Gradle estable (v8.7)
-        run: gradle wrapper --gradle-version 8.7
+      - name: 3. Instalar Gradle 8.7 Oficial y Estable
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
 
-      - name: 4. Dar permisos de ejecución
-        run: chmod +x gradlew
+      - name: 4. Construir el APK Nativo
+        run: gradle assembleDebug
 
-      - name: 5. Construir el APK Nativo
-        run: ./gradlew assembleDebug
-
-      - name: 6. Entregar el APK terminado
+      - name: 5. Entregar el APK terminado
         uses: actions/upload-artifact@v4
         with:
           name: SAEL-App-Nativa
