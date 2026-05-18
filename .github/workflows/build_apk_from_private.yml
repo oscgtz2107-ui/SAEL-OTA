@@ -20,13 +20,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: 3. Dar permisos al compilador
-        run: chmod +x gradlew
+      - name: 3. Construir el APK (Usando Gradle del Servidor)
+        run: gradle assembleDebug
 
-      - name: 4. Construir el APK Nativo
-        run: ./gradlew assembleDebug
-
-      - name: 5. Entregar el APK terminado
+      - name: 4. Entregar el APK terminado
         uses: actions/upload-artifact@v4
         with:
           name: SAEL-App-Nativa
