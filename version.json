@@ -1,5 +1,5 @@
 {
-  "version": "1.0.1",
-  "apkUrl": "https://oscgtz2107-ui.github.io/SAEL-OTA/SAEL-v1.0.1.apk",
-  "releaseNotes": "Mejoras de rendimiento y corrección de errores en el Asistente IA."
+  "version": "1.0.2",
+  "apkUrl": "https://github.com/oscgtz2107-ui/dashboard-app/releases/download/V.1.0.2/Documento.de.apk",
+  "releaseNotes": "Primera versión estable con sistema de actualización automática."
 }
