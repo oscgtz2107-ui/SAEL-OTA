@@ -168,7 +168,7 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           channelId: live
-          projectId: tu-project-id-aqui   # ← Reemplazar por tu ID real
+          projectId: cocina-inteligente-f94d0   # ← Reemplazar por tu ID real
         env:
           FIREBASE_CLI_EXPERIMENTS: webframeworks
 
