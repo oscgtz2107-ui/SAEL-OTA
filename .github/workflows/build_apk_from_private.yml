@@ -64,7 +64,7 @@ jobs:
           cp "$APK_PATH" "$NEW_APK_PATH"
           echo "APK renombrado a SAEL.apk"
 
-      - name: 7. Crear release, subir APK y publicar vía API REST
+      - name: 7. Crear release, subir APK y publicar con gh CLI
         id: create_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -84,60 +84,21 @@ jobs:
           RELEASE_NAME="SAEL v$FULL_VERSION"
           NOTES="Publicación automática desde GitHub Actions"
 
-          # 1. Crear release (draft) usando API REST
-          echo "Creando release draft..."
-          CREATE_RESPONSE=$(curl -s -X POST \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/$OWNER/$REPO/releases" \
-            -d @- <<EOF
-          {
-            "tag_name": "$TAG_NAME",
-            "name": "$RELEASE_NAME",
-            "body": "$NOTES",
-            "draft": true
-          }
-          EOF
-          )
+          echo "Creando release y subiendo APK..."
+          gh release create "$TAG_NAME" "$APK_PATH" \
+            --repo "$OWNER/$REPO" \
+            --title "$RELEASE_NAME" \
+            --notes "$NOTES" \
+            --draft=false
 
-          RELEASE_ID=$(echo "$CREATE_RESPONSE" | jq -r '.id')
-          UPLOAD_URL=$(echo "$CREATE_RESPONSE" | jq -r '.upload_url' | sed 's/{?name,label}//')
-
-          if [ -z "$RELEASE_ID" ] || [ "$RELEASE_ID" = "null" ]; then
-            echo "Error al crear release:"
-            echo "$CREATE_RESPONSE"
+          ASSET_URL=$(gh release view "$TAG_NAME" --repo "$OWNER/$REPO" --json assets -q '.assets[0].browser_download_url')
+          
+          if [ -z "$ASSET_URL" ]; then
+            echo "Error: No se pudo obtener la URL del APK"
             exit 1
           fi
-          echo "Release draft creado con ID: $RELEASE_ID"
-
-          # 2. Subir APK como asset
-          echo "Subiendo APK..."
-          UPLOAD_RESPONSE=$(curl -s -X POST \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Content-Type: application/vnd.android.package-archive" \
-            --data-binary "@$APK_PATH" \
-            "$UPLOAD_URL?name=SAEL.apk")
-
-          ASSET_URL=$(echo "$UPLOAD_RESPONSE" | jq -r '.browser_download_url')
-
-          if [ -z "$ASSET_URL" ] || [ "$ASSET_URL" = "null" ]; then
-            echo "Error al subir APK:"
-            echo "$UPLOAD_RESPONSE"
-            exit 1
-          fi
+          
           echo "APK subido, URL: $ASSET_URL"
-
-          # 3. Publicar release (dejar de ser draft)
-          echo "Publicando release..."
-          PUBLISH_RESPONSE=$(curl -s -X PATCH \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/$OWNER/$REPO/releases/$RELEASE_ID" \
-            -d '{"draft": false}')
-
-          echo "Release publicado."
-
-          # Exportar URL para siguientes pasos
           echo "APK_URL=$ASSET_URL" >> $GITHUB_OUTPUT
 
       - name: 8. Usar URL del APK
