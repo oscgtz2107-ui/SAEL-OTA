@@ -1,35 +1,114 @@
-name: Compilador SAEL (Desde Repo Privado)
+name: Compilar SAEL y publicar OTA completa
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 1. Clonar el código Privado de forma segura
+      # 1. Clonar el código fuente desde el repo PRIVADO
+      - name: Clonar código fuente (privado)
         uses: actions/checkout@v4
         with:
           repository: oscgtz2107-ui/dashboard-app
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
 
-      - name: 2. Preparar el motor Java 17
+      # 2. Preparar Java 17
+      - name: Configurar Java 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: 3. Instalar Gradle 8.7 Oficial y Estable
+      # 3. Instalar Gradle 8.7
+      - name: Instalar Gradle 8.7
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.7'
 
-      - name: 4. Construir el APK Nativo
+      # 4. Compilar el APK
+      - name: Compilar APK
         run: gradle assembleDebug
 
-      - name: 5. Entregar el APK terminado
-        uses: actions/upload-artifact@v4
+      # 5. Extraer el versionName del build.gradle
+      - name: Obtener versión actual
+        id: get_version
+        run: |
+          VERSION=$(grep -oP 'versionName\s+"\K[^"]+' app/build.gradle | head -1)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      # 6. Crear release en el repo PRIVADO y subir el APK
+      - name: Crear release en dashboard-app
+        env:
+          GITHUB_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+        run: |
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          gh release create "v$VERSION" app/build/outputs/apk/debug/app-debug.apk \
+            --repo oscgtz2107-ui/dashboard-app \
+            --title "SAEL v$VERSION" \
+            --notes "Publicación automática desde GitHub Actions" \
+            --draft=false
+
+      # 7. Obtener la URL pública del APK
+      - name: Obtener URL del APK
+        id: get_url
+        env:
+          GITHUB_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+        run: |
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          URL=$(gh release view "v$VERSION" --repo oscgtz2107-ui/dashboard-app --json assets -q '.assets[0].browser_download_url')
+          echo "APK_URL=$URL" >> $GITHUB_OUTPUT
+
+      # 8. Actualizar index.html en el código fuente (repo privado)
+      - name: Actualizar index.html
+        env:
+          VERSION: ${{ steps.get_version.outputs.VERSION }}
+          APK_URL: ${{ steps.get_url.outputs.APK_URL }}
+        run: |
+          sed -i "s|href=\".*\"|href=\"$APK_URL\"|" public/index.html
+          sed -i "s|Versión estable para Android.*|Versión estable para Android $VERSION | $(date +%Y) SAEL Project|" public/index.html
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add public/index.html
+          git commit -m "Actualizar enlace de descarga a v$VERSION" || echo "Sin cambios para commitear"
+          git push
+
+      # 9. Desplegar a Firebase Hosting
+      - name: Desplegar a Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          name: SAEL-App-Nativa
-          path: app/build/outputs/apk/debug/app-debug.apk
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: cocina-inteligente-f94d0   # <-- Reemplaza con tu Project ID de Firebase
+        env:
+          FIREBASE_CLI_EXPERIMENTS: webframeworks
+
+      # 10. Clonar SAEL-OTA (público) para actualizar version.json
+      - name: Clonar SAEL-OTA
+        uses: actions/checkout@v4
+        with:
+          repository: oscgtz2107-ui/SAEL-OTA
+          path: ota-repo
+
+      # 11. Actualizar version.json
+      - name: Actualizar version.json
+        env:
+          VERSION: ${{ steps.get_version.outputs.VERSION }}
+          APK_URL: ${{ steps.get_url.outputs.APK_URL }}
+        run: |
+          cd ota-repo
+          cat > version.json <<EOF
+          {
+            "version": "$VERSION",
+            "apkUrl": "$APK_URL",
+            "releaseNotes": "Actualización automática a la versión $VERSION."
+          }
+          EOF
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add version.json
+          git commit -m "Actualización OTA a v$VERSION" || echo "Sin cambios para commitear"
+          git push
