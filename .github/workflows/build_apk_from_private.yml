@@ -34,34 +34,40 @@ jobs:
       - name: 5. Extraer versionName y generar versión única
         id: get_version
         run: |
-          echo "=== Buscando build.gradle de SAEL ==="
-          # Buscar build.gradle o build.gradle.kts excluyendo la carpeta android/
-          BUILD_FILE=$(find . -name "build.gradle*" -not -path "./android/*" | head -1)
-          if [ -z "$BUILD_FILE" ]; then
-            echo "Error: No se encontró build.gradle de SAEL"
+          # Determinar el archivo build.gradle correcto (puede ser .gradle o .gradle.kts)
+          BUILD_FILE=""
+          if [ -f "app/build.gradle" ]; then
+            BUILD_FILE="app/build.gradle"
+          elif [ -f "app/build.gradle.kts" ]; then
+            BUILD_FILE="app/build.gradle.kts"
+          else
+            echo "Error: No se encontró app/build.gradle ni app/build.gradle.kts"
             exit 1
           fi
-          echo "Archivo encontrado: $BUILD_FILE"
-          VERSION_BASE=$(grep -oP 'versionName\s+"\K[^"]+' "$BUILD_FILE" | head -1)
+          echo "Archivo de compilación: $BUILD_FILE"
+          
+          # Extraer versionName (soporta versionName "x.y" y versionName = "x.y")
+          VERSION_BASE=$(grep -oP 'versionName\s*=\s*"\K[^"]+' "$BUILD_FILE" | head -1)
           if [ -z "$VERSION_BASE" ]; then
-            echo "Error: No se pudo extraer la versión de $BUILD_FILE"
+            echo "Error: No se pudo extraer versionName de $BUILD_FILE"
             exit 1
           fi
+          echo "Versión base: $VERSION_BASE"
+          
           VERSION_TS=$(date +'%y%m%d%H%M%S')
           FULL_VERSION="${VERSION_BASE}.${VERSION_TS}"
           echo "VERSION_BASE=$VERSION_BASE" >> $GITHUB_OUTPUT
           echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_OUTPUT
 
-      - name: 6. Buscar APK y crear release
+      - name: 6. Crear release en dashboard-app
         env:
           GITHUB_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
           FULL_VERSION="${{ steps.get_version.outputs.FULL_VERSION }}"
+          APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
           
-          # Buscar APK generado (excluyendo carpeta android/)
-          APK_PATH=$(find . -name "*.apk" -not -path "./android/*" | head -1)
-          if [ -z "$APK_PATH" ]; then
-            echo "Error: No se encontró el archivo APK"
+          if [ ! -f "$APK_PATH" ]; then
+            echo "Error: No se encontró el APK en $APK_PATH"
             exit 1
           fi
           echo "APK encontrado en: $APK_PATH"
@@ -122,7 +128,7 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           channelId: live
-          projectId: tu-project-id-aqui
+          projectId: tu-project-id-aqui   # ← Reemplaza con tu ID de proyecto Firebase
         env:
           FIREBASE_CLI_EXPERIMENTS: webframeworks
 
