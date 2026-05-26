@@ -91,10 +91,25 @@ jobs:
             --notes "$NOTES" \
             --draft=false
 
-          ASSET_URL=$(gh release view "$TAG_NAME" --repo "$OWNER/$REPO" --json assets -q '.assets[0].browser_download_url')
-          
+          # Obtener la URL del asset con reintentos (por posible retraso en la API)
+          RETRIES=5
+          DELAY=3
+          ASSET_URL=""
+          for i in $(seq 1 $RETRIES); do
+            echo "Intento $i de $RETRIES para obtener URL del asset..."
+            ASSET_URL=$(gh release view "$TAG_NAME" --repo "$OWNER/$REPO" --json assets -q '.assets[0].browser_download_url' 2>/dev/null)
+            if [ -n "$ASSET_URL" ]; then
+              echo "URL obtenida: $ASSET_URL"
+              break
+            fi
+            if [ $i -lt $RETRIES ]; then
+              echo "Asset no disponible aún, esperando ${DELAY}s..."
+              sleep $DELAY
+            fi
+          done
+
           if [ -z "$ASSET_URL" ]; then
-            echo "Error: No se pudo obtener la URL del APK"
+            echo "Error: No se pudo obtener la URL del APK después de $RETRIES intentos"
             exit 1
           fi
           
