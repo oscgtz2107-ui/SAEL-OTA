@@ -29,14 +29,26 @@ jobs:
         run: gradle assembleDebug
 
       - name: 5. Extraer versionName
-        id: get_version
-        run: |
-          VERSION=$(grep -oP 'versionName\s+"\K[^"]+' app/build.gradle | head -1)
-          if [ -z "$VERSION" ]; then
-            echo "Error: No se pudo extraer la versión"
-            exit 1
-          fi
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+  id: get_version
+  run: |
+    # Listar la estructura para depuración (opcional, puedes quitarlo después)
+    echo "=== Estructura del repositorio ==="
+    find . -maxdepth 3 -name "*.gradle" -type f
+    echo "================================"
+    
+    # Buscar build.gradle en toda la estructura y extraer versionName
+    BUILD_FILE=$(find . -name "build.gradle" -path "*/app/*" | head -1)
+    if [ -z "$BUILD_FILE" ]; then
+      echo "Error: No se encontró app/build.gradle"
+      exit 1
+    fi
+    echo "Archivo encontrado: $BUILD_FILE"
+    VERSION=$(grep -oP 'versionName\s+"\K[^"]+' "$BUILD_FILE" | head -1)
+    if [ -z "$VERSION" ]; then
+      echo "Error: No se pudo extraer la versión de $BUILD_FILE"
+      exit 1
+    fi
+    echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: 6. Crear release en dashboard-app
         env:
