@@ -154,8 +154,8 @@ jobs:
             echo "APK_URL vacío, abortando."
             exit 1
           fi
-          sed -i "s|href=\"[^\"]*\"|href=\"$APK_URL\"|" public/index.html
-          sed -i "s|Versión estable para Android.*|Versión estable para Android $VERSION | $(date +%Y) SAEL Project|" public/index.html
+          sed -i "s#href=\"[^\"]*\"#href=\"$APK_URL\"#" public/index.html
+          sed -i "s#Versión estable para Android.*#Versión estable para Android $VERSION | $(date +%Y) SAEL Project#" public/index.html
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add public/index.html
