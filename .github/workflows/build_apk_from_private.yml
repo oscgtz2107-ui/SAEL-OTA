@@ -57,13 +57,20 @@ jobs:
           echo "VERSION_BASE=$VERSION_BASE" >> $GITHUB_OUTPUT
           echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_OUTPUT
 
-      - name: 6. Crear release, subir APK y publicar vía API REST
+      - name: 6. Renombrar APK a SAEL.apk
+        run: |
+          APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+          NEW_APK_PATH="app/build/outputs/apk/debug/SAEL.apk"
+          cp "$APK_PATH" "$NEW_APK_PATH"
+          echo "APK renombrado a SAEL.apk"
+
+      - name: 7. Crear release, subir APK y publicar vía API REST
         id: create_release
         env:
           GITHUB_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
           FULL_VERSION="${{ steps.get_version.outputs.FULL_VERSION }}"
-          APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+          APK_PATH="app/build/outputs/apk/debug/SAEL.apk"
           
           if [ ! -f "$APK_PATH" ]; then
             echo "Error: No se encontró el APK en $APK_PATH"
@@ -72,7 +79,7 @@ jobs:
           echo "APK encontrado en: $APK_PATH"
 
           OWNER="oscgtz2107-ui"
-          REPO="dashboard-app"
+          REPO="SAEL-OTA"
           TAG_NAME="v$FULL_VERSION"
           RELEASE_NAME="SAEL v$FULL_VERSION"
           NOTES="Publicación automática desde GitHub Actions"
@@ -109,7 +116,7 @@ jobs:
             -H "Authorization: token $GITHUB_TOKEN" \
             -H "Content-Type: application/vnd.android.package-archive" \
             --data-binary "@$APK_PATH" \
-            "$UPLOAD_URL?name=$(basename $APK_PATH)")
+            "$UPLOAD_URL?name=SAEL.apk")
 
           ASSET_URL=$(echo "$UPLOAD_RESPONSE" | jq -r '.browser_download_url')
 
@@ -133,7 +140,7 @@ jobs:
           # Exportar URL para siguientes pasos
           echo "APK_URL=$ASSET_URL" >> $GITHUB_OUTPUT
 
-      - name: 7. Usar URL del APK
+      - name: 8. Usar URL del APK
         id: get_url
         env:
           APK_URL: ${{ steps.create_release.outputs.APK_URL }}
@@ -145,7 +152,7 @@ jobs:
           echo "URL del APK: $APK_URL"
           echo "APK_URL=$APK_URL" >> $GITHUB_OUTPUT
 
-      - name: 8. Actualizar index.html y subir cambio
+      - name: 9. Actualizar index.html y subir cambio
         env:
           VERSION: ${{ steps.get_version.outputs.FULL_VERSION }}
           APK_URL: ${{ steps.get_url.outputs.APK_URL }}
@@ -162,23 +169,23 @@ jobs:
           git commit -m "Actualizar enlace de descarga a v$VERSION" || echo "Sin cambios para commitear"
           git push
 
-      - name: 9. Desplegar a Firebase Hosting
+      - name: 10. Desplegar a Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           channelId: live
-          projectId: cocina-inteligente-f94d0   # ← Reemplazar por tu ID real
+          projectId: cocina-inteligente-f94d0
         env:
           FIREBASE_CLI_EXPERIMENTS: webframeworks
 
-      - name: 10. Clonar SAEL-OTA para version.json
+      - name: 11. Clonar SAEL-OTA para version.json
         uses: actions/checkout@v4
         with:
           repository: oscgtz2107-ui/SAEL-OTA
           path: ota-repo
 
-      - name: 11. Actualizar version.json
+      - name: 12. Actualizar version.json
         env:
           FULL_VERSION: ${{ steps.get_version.outputs.FULL_VERSION }}
           APK_URL: ${{ steps.get_url.outputs.APK_URL }}
