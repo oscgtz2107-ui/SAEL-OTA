@@ -64,73 +64,28 @@ jobs:
           cp "$APK_PATH" "$NEW_APK_PATH"
           echo "APK renombrado a SAEL.apk"
 
-      - name: 7. Crear release, subir APK y publicar con gh CLI
+      - name: 7. Crear release y subir APK
         id: create_release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          FULL_VERSION="${{ steps.get_version.outputs.FULL_VERSION }}"
-          APK_PATH="app/build/outputs/apk/debug/SAEL.apk"
-          
-          if [ ! -f "$APK_PATH" ]; then
-            echo "Error: No se encontró el APK en $APK_PATH"
-            exit 1
-          fi
-          echo "APK encontrado en: $APK_PATH"
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: oscgtz2107-ui/SAEL-OTA
+          tag_name: v${{ steps.get_version.outputs.FULL_VERSION }}
+          name: SAEL v${{ steps.get_version.outputs.FULL_VERSION }}
+          body: Publicación automática desde GitHub Actions
+          draft: false
+          files: app/build/outputs/apk/debug/SAEL.apk
 
-          OWNER="oscgtz2107-ui"
-          REPO="SAEL-OTA"
-          TAG_NAME="v$FULL_VERSION"
-          RELEASE_NAME="SAEL v$FULL_VERSION"
-          NOTES="Publicación automática desde GitHub Actions"
-
-          echo "Creando release..."
-          gh release create "$TAG_NAME" \
-            --repo "$OWNER/$REPO" \
-            --title "$RELEASE_NAME" \
-            --notes "$NOTES" \
-            --draft=false
-
-          echo "Subiendo APK al release..."
-          gh release upload "$TAG_NAME" "$APK_PATH" \
-            --repo "$OWNER/$REPO"
-
-          echo "Obteniendo URL del asset..."
-          RETRIES=5
-          DELAY=3
-          ASSET_URL=""
-          for i in $(seq 1 $RETRIES); do
-            echo "Intento $i de $RETRIES..."
-            ASSET_URL=$(gh release view "$TAG_NAME" --repo "$OWNER/$REPO" --json assets -q '.assets[0].browser_download_url' 2>/dev/null)
-            if [ -n "$ASSET_URL" ]; then
-              echo "URL obtenida: $ASSET_URL"
-              break
-            fi
-            if [ $i -lt $RETRIES ]; then
-              echo "Asset no disponible aún, esperando ${DELAY}s..."
-              sleep $DELAY
-            fi
-          done
-
-          if [ -z "$ASSET_URL" ]; then
-            echo "Error: No se pudo obtener la URL del APK después de $RETRIES intentos"
-            exit 1
-          fi
-          
-          echo "APK subido, URL: $ASSET_URL"
-          echo "APK_URL=$ASSET_URL" >> $GITHUB_OUTPUT
-
-      - name: 8. Usar URL del APK
+      - name: 8. Obtener URL del APK
         id: get_url
-        env:
-          APK_URL: ${{ steps.create_release.outputs.APK_URL }}
         run: |
-          if [ -z "$APK_URL" ]; then
-            echo "Error: APK_URL vacío"
+          ASSET_URL="${{ fromJSON(steps.create_release.outputs.assets)[0].browser_download_url }}"
+          if [ -z "$ASSET_URL" ]; then
+            echo "Error: No se pudo obtener la URL del APK"
             exit 1
           fi
-          echo "URL del APK: $APK_URL"
-          echo "APK_URL=$APK_URL" >> $GITHUB_OUTPUT
+          echo "URL del APK: $ASSET_URL"
+          echo "APK_URL=$ASSET_URL" >> $GITHUB_OUTPUT
 
       - name: 9. Actualizar index.html y subir cambio
         env:
