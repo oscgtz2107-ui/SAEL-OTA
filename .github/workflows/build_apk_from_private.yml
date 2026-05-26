@@ -53,6 +53,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
           VERSION="${{ steps.get_version.outputs.VERSION }}"
+          # Si ya existe un release con esta versión, lo borramos primero
+          gh release delete "v$VERSION" --repo oscgtz2107-ui/dashboard-app --yes || echo "No existía release previo, continuando..."
           gh release create "v$VERSION" app/build/outputs/apk/debug/app-debug.apk \
             --repo oscgtz2107-ui/dashboard-app \
             --title "SAEL v$VERSION" \
