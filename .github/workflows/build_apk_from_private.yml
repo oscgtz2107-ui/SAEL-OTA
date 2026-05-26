@@ -84,7 +84,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
           FULL_VERSION="${{ steps.get_version.outputs.FULL_VERSION }}"
-          RETRIES=3
+          RETRIES=10
           DELAY=5
           for i in $(seq 1 $RETRIES); do
             echo "Intento $i de $RETRIES..."
@@ -128,7 +128,7 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           channelId: live
-          projectId: tu-project-id-aqui   # ← Reemplaza con tu ID de proyecto Firebase
+          projectId: tu-project-id-aqui   # ← Reemplazar por tu ID real
         env:
           FIREBASE_CLI_EXPERIMENTS: webframeworks
 
