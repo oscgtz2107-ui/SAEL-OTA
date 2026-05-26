@@ -29,12 +29,12 @@ jobs:
         run: gradle assembleDebug
 
       - name: 5. Extraer versionName
-  id: get_version
-  run: |
+        id: get_version
+        run: |
     # Listar la estructura para depuración (opcional, puedes quitarlo después)
-    echo "=== Estructura del repositorio ==="
-    find . -maxdepth 3 -name "*.gradle" -type f
-    echo "================================"
+      echo "=== Estructura del repositorio ==="
+      find . -maxdepth 3 -name "*.gradle" -type f
+      echo "================================"
     
     # Buscar build.gradle en toda la estructura y extraer versionName
     BUILD_FILE=$(find . -name "build.gradle" -path "*/app/*" | head -1)
