@@ -31,7 +31,7 @@ jobs:
       - name: 4. Compilar APK
         run: gradle assembleDebug
 
-      - name: 5. Extraer versionName y generar versión única
+      - name: 5. Extraer versionName, actualizar versionCode y generar versión única
         id: get_version
         run: |
           BUILD_FILE=""
@@ -53,7 +53,14 @@ jobs:
           echo "Versión base: $VERSION_BASE"
           
           VERSION_TS=$(date +'%y%m%d%H%M%S')
+          # El versionCode será un número basado en el timestamp (sin puntos)
+          VERSION_CODE=$(date +'%Y%m%d%H%M')   # Ej: 202605262210
           FULL_VERSION="${VERSION_BASE}.${VERSION_TS}"
+          
+          # Actualizar versionCode en el build.gradle para que sea mayor que el anterior
+          sed -i "s/versionCode = .*/versionCode = $VERSION_CODE/" "$BUILD_FILE"
+          echo "versionCode actualizado a $VERSION_CODE"
+          
           echo "VERSION_BASE=$VERSION_BASE" >> $GITHUB_OUTPUT
           echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_OUTPUT
 
