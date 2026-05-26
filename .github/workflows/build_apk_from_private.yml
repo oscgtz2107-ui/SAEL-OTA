@@ -29,14 +29,14 @@ jobs:
         run: gradle assembleDebug
 
       - name: 5. Extraer versionName
-  id: get_version
-  run: |
-    VERSION=$(grep -oP 'versionName\s+"\K[^"]+' app/build.gradle | head -1)
-    if [ -z "$VERSION" ]; then
-      echo "Error: No se pudo extraer la versión"
-      exit 1
-    fi
-    echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        id: get_version
+        run: |
+          VERSION=$(grep -oP 'versionName\s+"\K[^"]+' app/build.gradle | head -1)
+          if [ -z "$VERSION" ]; then
+            echo "Error: No se pudo extraer la versión"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: 6. Crear release en dashboard-app
         env:
