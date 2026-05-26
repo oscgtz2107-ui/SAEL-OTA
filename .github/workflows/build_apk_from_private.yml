@@ -34,11 +34,13 @@ jobs:
       - name: 5. Extraer versionName y generar versión única
         id: get_version
         run: |
-          echo "=== Buscando build.gradle de SAEL ==="
-          # Buscar app/build.gradle excluyendo la carpeta android/
-          BUILD_FILE=$(find . -name "build.gradle" -path "*/app/*" ! -path "*/android/*" | head -1)
+          echo "=== Estructura del repositorio (depuración) ==="
+          ls -R . | head -50
+          echo "================================================"
+          # Buscar build.gradle excluyendo la carpeta android/
+          BUILD_FILE=$(find . -name build.gradle -not -path "./android/*" | head -1)
           if [ -z "$BUILD_FILE" ]; then
-            echo "Error: No se encontró app/build.gradle"
+            echo "Error: No se encontró build.gradle de SAEL"
             exit 1
           fi
           echo "Archivo encontrado: $BUILD_FILE"
@@ -58,8 +60,8 @@ jobs:
         run: |
           FULL_VERSION="${{ steps.get_version.outputs.FULL_VERSION }}"
           
-          # Buscar el APK generado dinámicamente
-          APK_PATH=$(find . -name "*.apk" -path "*/debug/*" ! -path "*/android/*" | head -1)
+          # Buscar APK generado (excluyendo carpeta android/)
+          APK_PATH=$(find . -name "*.apk" -not -path "./android/*" | head -1)
           if [ -z "$APK_PATH" ]; then
             echo "Error: No se encontró el archivo APK"
             exit 1
