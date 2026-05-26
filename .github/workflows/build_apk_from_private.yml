@@ -28,7 +28,7 @@ jobs:
       - name: 4. Compilar APK
         run: gradle assembleDebug
 
-      - name: 5. Extraer versionName
+      - name: 5. Extraer versionName y generar versión única
         id: get_version
         run: |
           echo "=== Estructura del repositorio ==="
@@ -41,26 +41,25 @@ jobs:
             exit 1
           fi
           echo "Archivo encontrado: $BUILD_FILE"
-          VERSION=$(grep -oP 'versionName\s+"\K[^"]+' "$BUILD_FILE" | head -1)
-          if [ -z "$VERSION" ]; then
+          VERSION_BASE=$(grep -oP 'versionName\s+"\K[^"]+' "$BUILD_FILE" | head -1)
+          if [ -z "$VERSION_BASE" ]; then
             echo "Error: No se pudo extraer la versión de $BUILD_FILE"
             exit 1
           fi
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          # Generar timestamp corto para versión única (ej: 1.0.260526045512)
+          VERSION_TS=$(date +'%y%m%d%H%M%S')
+          FULL_VERSION="${VERSION_BASE}.${VERSION_TS}"
+          echo "VERSION_BASE=$VERSION_BASE" >> $GITHUB_OUTPUT
+          echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_OUTPUT
 
       - name: 6. Crear release en dashboard-app
         env:
           GITHUB_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
-          VERSION="${{ steps.get_version.outputs.VERSION }}"
-          # 1. Eliminar release previo si existe
-          gh release delete "v$VERSION" --repo oscgtz2107-ui/dashboard-app --yes --cleanup-tag 2>/dev/null || true
-          # 2. Eliminar el tag remoto por si acaso
-          git push origin ":refs/tags/v$VERSION" 2>/dev/null || true
-          # 3. Crear nuevo release
-          gh release create "v$VERSION" app/build/outputs/apk/debug/app-debug.apk \
+          FULL_VERSION="${{ steps.get_version.outputs.FULL_VERSION }}"
+          gh release create "v$FULL_VERSION" app/build/outputs/apk/debug/app-debug.apk \
             --repo oscgtz2107-ui/dashboard-app \
-            --title "SAEL v$VERSION" \
+            --title "SAEL v$FULL_VERSION" \
             --notes "Publicación automática desde GitHub Actions" \
             --draft=false
 
@@ -69,8 +68,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
-          VERSION="${{ steps.get_version.outputs.VERSION }}"
-          URL=$(gh release view "v$VERSION" --repo oscgtz2107-ui/dashboard-app --json assets -q '.assets[0].browser_download_url')
+          FULL_VERSION="${{ steps.get_version.outputs.FULL_VERSION }}"
+          URL=$(gh release view "v$FULL_VERSION" --repo oscgtz2107-ui/dashboard-app --json assets -q '.assets[0].browser_download_url')
           if [ -z "$URL" ]; then
             echo "Error: No se pudo obtener la URL del APK"
             exit 1
@@ -79,7 +78,7 @@ jobs:
 
       - name: 8. Actualizar index.html y subir cambio
         env:
-          VERSION: ${{ steps.get_version.outputs.VERSION }}
+          VERSION: ${{ steps.get_version.outputs.FULL_VERSION }}
           APK_URL: ${{ steps.get_url.outputs.APK_URL }}
         run: |
           if [ -z "$APK_URL" ]; then
@@ -112,19 +111,19 @@ jobs:
 
       - name: 11. Actualizar version.json
         env:
-          VERSION: ${{ steps.get_version.outputs.VERSION }}
+          FULL_VERSION: ${{ steps.get_version.outputs.FULL_VERSION }}
           APK_URL: ${{ steps.get_url.outputs.APK_URL }}
         run: |
           cd ota-repo
           cat > version.json <<EOF
           {
-            "version": "$VERSION",
+            "version": "$FULL_VERSION",
             "apkUrl": "$APK_URL",
-            "releaseNotes": "Actualización automática a la versión $VERSION."
+            "releaseNotes": "Actualización automática a la versión $FULL_VERSION."
           }
           EOF
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add version.json
-          git commit -m "Actualización OTA a v$VERSION" || echo "Sin cambios para commitear"
+          git commit -m "Actualización OTA a v$FULL_VERSION" || echo "Sin cambios para commitear"
           git push
