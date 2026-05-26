@@ -34,11 +34,9 @@ jobs:
       - name: 5. Extraer versionName y generar versión única
         id: get_version
         run: |
-          echo "=== Estructura del repositorio (depuración) ==="
-          ls -R . | head -50
-          echo "================================================"
-          # Buscar build.gradle excluyendo la carpeta android/
-          BUILD_FILE=$(find . -name build.gradle -not -path "./android/*" | head -1)
+          echo "=== Buscando build.gradle de SAEL ==="
+          # Buscar build.gradle o build.gradle.kts excluyendo la carpeta android/
+          BUILD_FILE=$(find . -name "build.gradle*" -not -path "./android/*" | head -1)
           if [ -z "$BUILD_FILE" ]; then
             echo "Error: No se encontró build.gradle de SAEL"
             exit 1
