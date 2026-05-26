@@ -57,7 +57,7 @@ jobs:
           echo "VERSION_BASE=$VERSION_BASE" >> $GITHUB_OUTPUT
           echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_OUTPUT
 
-      - name: 6. Crear release y subir APK
+      - name: 6. Crear release DRAFT, subir APK y publicar
         env:
           GITHUB_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
@@ -70,43 +70,37 @@ jobs:
           fi
           echo "APK encontrado en: $APK_PATH"
           
-          # 1. Crear release sin adjuntar archivos
+          # 1. Crear release en modo borrador (DRAFT)
           gh release create "v$FULL_VERSION" \
             --repo oscgtz2107-ui/dashboard-app \
             --title "SAEL v$FULL_VERSION" \
             --notes "Publicación automática desde GitHub Actions" \
-            --draft=false
-          
-          # 2. Subir el APK al release recién creado
+            --draft
+
+          # 2. Subir el APK al release en borrador
           gh release upload "v$FULL_VERSION" "$APK_PATH" \
             --repo oscgtz2107-ui/dashboard-app
 
-      - name: 7. Obtener URL del APK (con reintento)
+          # 3. Publicar el release (dejar de ser borrador)
+          gh release edit "v$FULL_VERSION" \
+            --repo oscgtz2107-ui/dashboard-app \
+            --draft=false
+
+      - name: 7. Obtener URL del APK
         id: get_url
         env:
           GITHUB_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
           FULL_VERSION="${{ steps.get_version.outputs.FULL_VERSION }}"
-          RETRIES=10
-          DELAY=5
-          for i in $(seq 1 $RETRIES); do
-            echo "Intento $i de $RETRIES..."
-            URL=$(gh release view "v$FULL_VERSION" --repo oscgtz2107-ui/dashboard-app --json assets -q '.assets[0].browser_download_url' 2>/dev/null)
-            
-            if [ -n "$URL" ]; then
-              echo "URL obtenida: $URL"
-              echo "APK_URL=$URL" >> $GITHUB_OUTPUT
-              exit 0
-            fi
-            
-            if [ $i -lt $RETRIES ]; then
-              echo "Activos no disponibles aún, esperando ${DELAY}s..."
-              sleep $DELAY
-            fi
-          done
+          URL=$(gh release view "v$FULL_VERSION" --repo oscgtz2107-ui/dashboard-app --json assets -q '.assets[0].browser_download_url' 2>/dev/null)
           
-          echo "Error: No se pudo obtener la URL del APK después de $RETRIES intentos"
-          exit 1
+          if [ -n "$URL" ]; then
+            echo "URL obtenida: $URL"
+            echo "APK_URL=$URL" >> $GITHUB_OUTPUT
+          else
+            echo "Error: No se pudo obtener la URL del APK"
+            exit 1
+          fi
 
       - name: 8. Actualizar index.html y subir cambio
         env:
