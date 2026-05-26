@@ -67,7 +67,7 @@ jobs:
       - name: 7. Crear release, subir APK y publicar vía API REST
         id: create_release
         env:
-          GITHUB_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           FULL_VERSION="${{ steps.get_version.outputs.FULL_VERSION }}"
           APK_PATH="app/build/outputs/apk/debug/SAEL.apk"
