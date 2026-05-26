@@ -84,19 +84,23 @@ jobs:
           RELEASE_NAME="SAEL v$FULL_VERSION"
           NOTES="Publicación automática desde GitHub Actions"
 
-          echo "Creando release y subiendo APK..."
-          gh release create "$TAG_NAME" "$APK_PATH" \
+          echo "Creando release..."
+          gh release create "$TAG_NAME" \
             --repo "$OWNER/$REPO" \
             --title "$RELEASE_NAME" \
             --notes "$NOTES" \
             --draft=false
 
-          # Obtener la URL del asset con reintentos (por posible retraso en la API)
+          echo "Subiendo APK al release..."
+          gh release upload "$TAG_NAME" "$APK_PATH" \
+            --repo "$OWNER/$REPO"
+
+          echo "Obteniendo URL del asset..."
           RETRIES=5
           DELAY=3
           ASSET_URL=""
           for i in $(seq 1 $RETRIES); do
-            echo "Intento $i de $RETRIES para obtener URL del asset..."
+            echo "Intento $i de $RETRIES..."
             ASSET_URL=$(gh release view "$TAG_NAME" --repo "$OWNER/$REPO" --json assets -q '.assets[0].browser_download_url' 2>/dev/null)
             if [ -n "$ASSET_URL" ]; then
               echo "URL obtenida: $ASSET_URL"
