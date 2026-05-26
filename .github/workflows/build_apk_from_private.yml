@@ -34,7 +34,6 @@ jobs:
       - name: 5. Extraer versionName y generar versión única
         id: get_version
         run: |
-          # Determinar el archivo build.gradle correcto (puede ser .gradle o .gradle.kts)
           BUILD_FILE=""
           if [ -f "app/build.gradle" ]; then
             BUILD_FILE="app/build.gradle"
@@ -46,7 +45,6 @@ jobs:
           fi
           echo "Archivo de compilación: $BUILD_FILE"
           
-          # Extraer versionName (soporta versionName "x.y" y versionName = "x.y")
           VERSION_BASE=$(grep -oP 'versionName\s*=\s*"\K[^"]+' "$BUILD_FILE" | head -1)
           if [ -z "$VERSION_BASE" ]; then
             echo "Error: No se pudo extraer versionName de $BUILD_FILE"
@@ -59,7 +57,7 @@ jobs:
           echo "VERSION_BASE=$VERSION_BASE" >> $GITHUB_OUTPUT
           echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_OUTPUT
 
-      - name: 6. Crear release en dashboard-app
+      - name: 6. Crear release y subir APK
         env:
           GITHUB_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
@@ -72,11 +70,16 @@ jobs:
           fi
           echo "APK encontrado en: $APK_PATH"
           
-          gh release create "v$FULL_VERSION" "$APK_PATH" \
+          # 1. Crear release sin adjuntar archivos
+          gh release create "v$FULL_VERSION" \
             --repo oscgtz2107-ui/dashboard-app \
             --title "SAEL v$FULL_VERSION" \
             --notes "Publicación automática desde GitHub Actions" \
             --draft=false
+          
+          # 2. Subir el APK al release recién creado
+          gh release upload "v$FULL_VERSION" "$APK_PATH" \
+            --repo oscgtz2107-ui/dashboard-app
 
       - name: 7. Obtener URL del APK (con reintento)
         id: get_url
