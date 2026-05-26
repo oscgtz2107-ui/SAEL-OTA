@@ -57,7 +57,8 @@ jobs:
           echo "VERSION_BASE=$VERSION_BASE" >> $GITHUB_OUTPUT
           echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_OUTPUT
 
-      - name: 6. Crear release DRAFT, subir APK y publicar
+      - name: 6. Crear release, subir APK y publicar vía API REST
+        id: create_release
         env:
           GITHUB_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
@@ -69,38 +70,80 @@ jobs:
             exit 1
           fi
           echo "APK encontrado en: $APK_PATH"
-          
-          # 1. Crear release en modo borrador (DRAFT)
-          gh release create "v$FULL_VERSION" \
-            --repo oscgtz2107-ui/dashboard-app \
-            --title "SAEL v$FULL_VERSION" \
-            --notes "Publicación automática desde GitHub Actions" \
-            --draft
 
-          # 2. Subir el APK al release en borrador
-          gh release upload "v$FULL_VERSION" "$APK_PATH" \
-            --repo oscgtz2107-ui/dashboard-app
+          OWNER="oscgtz2107-ui"
+          REPO="dashboard-app"
+          TAG_NAME="v$FULL_VERSION"
+          RELEASE_NAME="SAEL v$FULL_VERSION"
+          NOTES="Publicación automática desde GitHub Actions"
 
-          # 3. Publicar el release (dejar de ser borrador)
-          gh release edit "v$FULL_VERSION" \
-            --repo oscgtz2107-ui/dashboard-app \
-            --draft=false
+          # 1. Crear release (draft) usando API REST
+          echo "Creando release draft..."
+          CREATE_RESPONSE=$(curl -s -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$OWNER/$REPO/releases" \
+            -d @- <<EOF
+          {
+            "tag_name": "$TAG_NAME",
+            "name": "$RELEASE_NAME",
+            "body": "$NOTES",
+            "draft": true
+          }
+          EOF
+          )
 
-      - name: 7. Obtener URL del APK
-        id: get_url
-        env:
-          GITHUB_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
-        run: |
-          FULL_VERSION="${{ steps.get_version.outputs.FULL_VERSION }}"
-          URL=$(gh release view "v$FULL_VERSION" --repo oscgtz2107-ui/dashboard-app --json assets -q '.assets[0].browser_download_url' 2>/dev/null)
-          
-          if [ -n "$URL" ]; then
-            echo "URL obtenida: $URL"
-            echo "APK_URL=$URL" >> $GITHUB_OUTPUT
-          else
-            echo "Error: No se pudo obtener la URL del APK"
+          RELEASE_ID=$(echo "$CREATE_RESPONSE" | jq -r '.id')
+          UPLOAD_URL=$(echo "$CREATE_RESPONSE" | jq -r '.upload_url' | sed 's/{?name,label}//')
+
+          if [ -z "$RELEASE_ID" ] || [ "$RELEASE_ID" = "null" ]; then
+            echo "Error al crear release:"
+            echo "$CREATE_RESPONSE"
             exit 1
           fi
+          echo "Release draft creado con ID: $RELEASE_ID"
+
+          # 2. Subir APK como asset
+          echo "Subiendo APK..."
+          UPLOAD_RESPONSE=$(curl -s -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            --data-binary "@$APK_PATH" \
+            "$UPLOAD_URL?name=$(basename $APK_PATH)")
+
+          ASSET_URL=$(echo "$UPLOAD_RESPONSE" | jq -r '.browser_download_url')
+
+          if [ -z "$ASSET_URL" ] || [ "$ASSET_URL" = "null" ]; then
+            echo "Error al subir APK:"
+            echo "$UPLOAD_RESPONSE"
+            exit 1
+          fi
+          echo "APK subido, URL: $ASSET_URL"
+
+          # 3. Publicar release (dejar de ser draft)
+          echo "Publicando release..."
+          PUBLISH_RESPONSE=$(curl -s -X PATCH \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$OWNER/$REPO/releases/$RELEASE_ID" \
+            -d '{"draft": false}')
+
+          echo "Release publicado."
+
+          # Exportar URL para siguientes pasos
+          echo "APK_URL=$ASSET_URL" >> $GITHUB_OUTPUT
+
+      - name: 7. Usar URL del APK
+        id: get_url
+        env:
+          APK_URL: ${{ steps.create_release.outputs.APK_URL }}
+        run: |
+          if [ -z "$APK_URL" ]; then
+            echo "Error: APK_URL vacío"
+            exit 1
+          fi
+          echo "URL del APK: $APK_URL"
+          echo "APK_URL=$APK_URL" >> $GITHUB_OUTPUT
 
       - name: 8. Actualizar index.html y subir cambio
         env:
