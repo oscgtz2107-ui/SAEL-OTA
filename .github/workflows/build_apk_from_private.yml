@@ -56,9 +56,14 @@ jobs:
           
           FULL_VERSION="${VERSION_BASE}.${VERSION_TS}"
           
-          # Actualizar versionCode en el build.gradle antes de compilar
+          # 1. Inyectamos el versionCode para la memoria interna de Android
           sed -i "s/versionCode = .*/versionCode = $VERSION_CODE/" "$BUILD_FILE"
+          
+          # 2. Inyectamos el versionName con el timestamp para que tu código lo pueda leer
+          sed -i "s/versionName = .*/versionName = \"$FULL_VERSION\"/" "$BUILD_FILE"
+          
           echo "versionCode actualizado a $VERSION_CODE"
+          echo "versionName actualizado a $FULL_VERSION"
           
           echo "VERSION_BASE=$VERSION_BASE" >> $GITHUB_OUTPUT
           echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_OUTPUT
