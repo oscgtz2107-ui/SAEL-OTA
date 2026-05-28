@@ -28,7 +28,6 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      # ---> MOVIDO: Actualizamos el build.gradle ANTES de compilar
       - name: 4. Extraer versionName, actualizar versionCode y generar versión única
         id: get_version
         run: |
@@ -51,16 +50,19 @@ jobs:
           echo "Versión base: $VERSION_BASE"
           
           VERSION_TS=$(date +'%y%m%d%H%M%S')
-          VERSION_CODE=$(date +'%Y%m%d%H%M')   # Ej: 202605262210
+          
+          # Solución al Integer Overflow: Usar Epoch Time en segundos (cabe perfecto en Int32)
+          VERSION_CODE=$(date +%s)
+          
           FULL_VERSION="${VERSION_BASE}.${VERSION_TS}"
           
+          # Actualizar versionCode en el build.gradle antes de compilar
           sed -i "s/versionCode = .*/versionCode = $VERSION_CODE/" "$BUILD_FILE"
           echo "versionCode actualizado a $VERSION_CODE"
           
           echo "VERSION_BASE=$VERSION_BASE" >> $GITHUB_OUTPUT
           echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_OUTPUT
 
-      # ---> MOVIDO: Ahora sí compilamos, y el APK absorberá el versionCode inyectado arriba
       - name: 5. Compilar APK
         run: gradle assembleDebug
 
@@ -121,7 +123,6 @@ jobs:
         env:
           FIREBASE_CLI_EXPERIMENTS: webframeworks
 
-      # ---> CORRECCIÓN: Usar el Private Token para asegurar el acceso de escritura al repo OTA
       - name: 11. Clonar SAEL-OTA para version.json
         uses: actions/checkout@v4
         with:
@@ -139,7 +140,7 @@ jobs:
           {
             "version": "$FULL_VERSION",
             "apkUrl": "$APK_URL",
-            "releaseNotes": "Actualización automática de Splash Screen e íconos a la versión $FULL_VERSION."
+            "releaseNotes": "Actualización automática OTA: Nuevo logo y transición de Splash Screen perfectas. Versión $FULL_VERSION."
           }
           EOF
           git config user.name "GitHub Actions"
